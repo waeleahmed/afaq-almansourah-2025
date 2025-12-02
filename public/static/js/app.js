@@ -2698,35 +2698,42 @@ async function deleteTeacher(id, name) {
   
   try {
     const response = await axios.delete(`/api/admin/teachers/${id}`);
+    
     if (response.data.success) {
       toast.success('تم حذف المعلم بنجاح!');
       showTeachersManagementFull();
-    } else {
-      // Check if teacher has evaluations
-      if (response.data.hasEvaluations) {
-        const forceDelete = confirm(
-          `⚠️ تحذير: المعلم "${name}" لديه ${response.data.evaluationCount} تقييم!\n\n` +
-          `هل تريد حذف المعلم مع جميع تقييماته؟\n` +
-          `هذا الإجراء لا يمكن التراجع عنه!`
-        );
-        
-        if (forceDelete) {
-          // Force delete with evaluations
-          const forceResponse = await axios.delete(`/api/admin/teachers/${id}?force=true`);
-          if (forceResponse.data.success) {
-            toast.success(`تم حذف المعلم و${response.data.evaluationCount} تقييم بنجاح`);
-            showTeachersManagementFull();
-          } else {
-            toast.error(forceResponse.data.message || 'حدث خطأ في الحذف');
-          }
-        }
-      } else {
-        toast.error(response.data.message || 'حدث خطأ في الحذف');
-      }
     }
   } catch (error) {
     console.error('Error deleting teacher:', error);
-    toast.error(error.response?.data?.message || 'حدث خطأ في حذف المعلم');
+    
+    // Check if it's a 400 error with evaluations
+    if (error.response && error.response.status === 400 && error.response.data.hasEvaluations) {
+      const evalCount = error.response.data.evaluationCount;
+      const forceDelete = confirm(
+        `⚠️ تحذير: المعلم "${name}" لديه ${evalCount} تقييم!\n\n` +
+        `هل تريد حذف المعلم مع جميع تقييماته؟\n` +
+        `هذا الإجراء لا يمكن التراجع عنه!`
+      );
+      
+      if (forceDelete) {
+        try {
+          // Force delete with evaluations
+          const forceResponse = await axios.delete(`/api/admin/teachers/${id}?force=true`);
+          if (forceResponse.data.success) {
+            toast.success(`تم حذف المعلم و${evalCount} تقييم بنجاح`);
+            showTeachersManagementFull();
+          } else {
+            toast.error('حدث خطأ في الحذف القسري');
+          }
+        } catch (forceError) {
+          console.error('Error force deleting teacher:', forceError);
+          toast.error('حدث خطأ في الحذف القسري');
+        }
+      }
+    } else {
+      // Other errors
+      toast.error(error.response?.data?.message || 'حدث خطأ في حذف المعلم');
+    }
   }
 }
 
