@@ -801,11 +801,216 @@ async function showAdminDashboard() {
             <h3 class="text-xl font-bold text-gray-800">إدارة الطلاب</h3>
             <p class="text-gray-600 mt-2 text-sm">عرض وإدارة الطلاب (CRUD)</p>
           </div>
+
+          <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="showExcelUploadPage()">
+            <div class="icon-3d inline-block mb-4">
+              <i class="fas fa-file-excel text-emerald-600" style="font-size: 3rem;"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800">رفع ملفات Excel</h3>
+            <p class="text-gray-600 mt-2 text-sm">رفع الطلاب والمعلمين بالجملة</p>
+          </div>
+
+          <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="window.location.href='/api/settings'">
+            <div class="icon-3d inline-block mb-4">
+              <i class="fas fa-cog text-gray-600" style="font-size: 3rem;"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800">الإعدادات</h3>
+            <p class="text-gray-600 mt-2 text-sm">إعدادات النظام العامة</p>
+          </div>
         </div>
       </div>
     `;
   } catch (error) {
     console.error('Error loading admin dashboard:', error);
+  }
+}
+
+// ============================================
+// Excel Upload Page
+// ============================================
+function showExcelUploadPage() {
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="max-w-6xl mx-auto fade-in">
+      <!-- Header -->
+      <div class="glass-card p-6 mb-8">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-3xl font-bold text-gray-800">رفع ملفات Excel</h2>
+            <p class="text-gray-600 text-lg mt-1">رفع بيانات الطلاب والمعلمين بشكل جماعي</p>
+          </div>
+          <button onclick="showAdminDashboard()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold">
+            <i class="fas fa-arrow-right ml-2"></i>
+            رجوع
+          </button>
+        </div>
+      </div>
+
+      <!-- Instructions -->
+      <div class="glass-card p-6 mb-8 bg-blue-50 border-2 border-blue-200">
+        <h3 class="text-xl font-bold text-blue-800 mb-4">
+          <i class="fas fa-info-circle ml-2"></i>
+          تعليمات الاستخدام
+        </h3>
+        <ol class="list-decimal list-inside space-y-2 text-gray-700 text-lg">
+          <li><strong>قم بتحميل القالب المناسب</strong> (طلاب أو معلمين) من الأزرار أدناه</li>
+          <li><strong>افتح الملف</strong> واحفظه بصيغة Excel (.xlsx)</li>
+          <li><strong>احذف البيانات النموذجية</strong> واملأ بيانات طلابك/معلميك الفعلية</li>
+          <li><strong>تأكد من عدم تغيير أسماء الأعمدة</strong> في الصف الأول</li>
+          <li><strong>احفظ الملف</strong> بعد التعديل</li>
+          <li><strong>ارفع الملف</strong> باستخدام الأزرار أدناه</li>
+        </ol>
+      </div>
+
+      <!-- Students Section -->
+      <div class="glass-card p-8 mb-8">
+        <div class="flex items-center mb-6">
+          <div class="icon-3d">
+            <i class="fas fa-users text-blue-600" style="font-size: 2.5rem;"></i>
+          </div>
+          <div class="mr-4">
+            <h3 class="text-2xl font-bold text-gray-800">رفع بيانات الطلاب</h3>
+            <p class="text-gray-600 mt-1">قم بتحميل القالب، املأ البيانات، ثم ارفع الملف</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Download Template -->
+          <div class="border-2 border-dashed border-blue-300 rounded-xl p-6 text-center hover:border-blue-500 transition-all">
+            <i class="fas fa-download text-blue-600 text-4xl mb-4"></i>
+            <h4 class="text-xl font-bold text-gray-800 mb-2">1. تحميل قالب الطلاب</h4>
+            <p class="text-gray-600 mb-4 text-sm">قالب Excel جاهز مع التعليمات</p>
+            <button onclick="excelHandler.generateStudentsTemplate()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold w-full">
+              <i class="fas fa-file-excel ml-2"></i>
+              تحميل قالب الطلاب
+            </button>
+          </div>
+
+          <!-- Upload File -->
+          <div class="border-2 border-dashed border-green-300 rounded-xl p-6 text-center hover:border-green-500 transition-all">
+            <i class="fas fa-upload text-green-600 text-4xl mb-4"></i>
+            <h4 class="text-xl font-bold text-gray-800 mb-2">2. رفع ملف الطلاب</h4>
+            <p class="text-gray-600 mb-4 text-sm">اختر ملف Excel بعد تعبئته</p>
+            <input type="file" id="studentsFileInput" accept=".xlsx,.xls" class="hidden">
+            <button onclick="document.getElementById('studentsFileInput').click()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold w-full mb-3">
+              <i class="fas fa-file-upload ml-2"></i>
+              اختر ملف Excel
+            </button>
+            <button onclick="uploadStudentsFile()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold w-full">
+              <i class="fas fa-cloud-upload-alt ml-2"></i>
+              رفع البيانات
+            </button>
+            <p id="studentsFileName" class="text-sm text-gray-500 mt-2"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Teachers Section -->
+      <div class="glass-card p-8">
+        <div class="flex items-center mb-6">
+          <div class="icon-3d">
+            <i class="fas fa-chalkboard-teacher text-purple-600" style="font-size: 2.5rem;"></i>
+          </div>
+          <div class="mr-4">
+            <h3 class="text-2xl font-bold text-gray-800">رفع بيانات المعلمين</h3>
+            <p class="text-gray-600 mt-1">قم بتحميل القالب، املأ البيانات، ثم ارفع الملف</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Download Template -->
+          <div class="border-2 border-dashed border-purple-300 rounded-xl p-6 text-center hover:border-purple-500 transition-all">
+            <i class="fas fa-download text-purple-600 text-4xl mb-4"></i>
+            <h4 class="text-xl font-bold text-gray-800 mb-2">1. تحميل قالب المعلمين</h4>
+            <p class="text-gray-600 mb-4 text-sm">قالب Excel جاهز مع التعليمات</p>
+            <button onclick="excelHandler.generateTeachersTemplate()" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold w-full">
+              <i class="fas fa-file-excel ml-2"></i>
+              تحميل قالب المعلمين
+            </button>
+          </div>
+
+          <!-- Upload File -->
+          <div class="border-2 border-dashed border-orange-300 rounded-xl p-6 text-center hover:border-orange-500 transition-all">
+            <i class="fas fa-upload text-orange-600 text-4xl mb-4"></i>
+            <h4 class="text-xl font-bold text-gray-800 mb-2">2. رفع ملف المعلمين</h4>
+            <p class="text-gray-600 mb-4 text-sm">اختر ملف Excel بعد تعبئته</p>
+            <input type="file" id="teachersFileInput" accept=".xlsx,.xls" class="hidden">
+            <button onclick="document.getElementById('teachersFileInput').click()" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold w-full mb-3">
+              <i class="fas fa-file-upload ml-2"></i>
+              اختر ملف Excel
+            </button>
+            <button onclick="uploadTeachersFile()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold w-full">
+              <i class="fas fa-cloud-upload-alt ml-2"></i>
+              رفع البيانات
+            </button>
+            <p id="teachersFileName" class="text-sm text-gray-500 mt-2"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Add event listeners for file inputs
+  document.getElementById('studentsFileInput').addEventListener('change', function(e) {
+    const fileName = e.target.files[0]?.name || 'لم يتم اختيار ملف';
+    document.getElementById('studentsFileName').textContent = fileName;
+  });
+
+  document.getElementById('teachersFileInput').addEventListener('change', function(e) {
+    const fileName = e.target.files[0]?.name || 'لم يتم اختيار ملف';
+    document.getElementById('teachersFileName').textContent = fileName;
+  });
+}
+
+// Upload students file
+async function uploadStudentsFile() {
+  const fileInput = document.getElementById('studentsFileInput');
+  const file = fileInput.files[0];
+  
+  if (!file) {
+    toast.error('يرجى اختيار ملف Excel أولاً');
+    return;
+  }
+
+  const result = await excelHandler.uploadStudents(file);
+  
+  if (result && result.success) {
+    // Show success message with details
+    toast.success(`تم رفع ${result.inserted} طالب بنجاح${result.skipped > 0 ? `، تم تخطي ${result.skipped}` : ''}`);
+    
+    if (result.errors && result.errors.length > 0) {
+      console.log('Errors:', result.errors);
+      toast.warning('بعض البيانات تم تخطيها', 'تحقق من وحدة التحكم للتفاصيل');
+    }
+    
+    // Reset file input
+    fileInput.value = '';
+    document.getElementById('studentsFileName').textContent = '';
+  }
+}
+
+// Upload teachers file
+async function uploadTeachersFile() {
+  const fileInput = document.getElementById('teachersFileInput');
+  const file = fileInput.files[0];
+  
+  if (!file) {
+    toast.error('يرجى اختيار ملف Excel أولاً');
+    return;
+  }
+
+  const result = await excelHandler.uploadTeachers(file);
+  
+  if (result && result.success) {
+    toast.success(`تم رفع ${result.inserted} معلم بنجاح${result.skipped > 0 ? `، تم تخطي ${result.skipped}` : ''}`);
+    
+    if (result.errors && result.errors.length > 0) {
+      console.log('Errors:', result.errors);
+      toast.warning('بعض البيانات تم تخطيها', 'تحقق من وحدة التحكم للتفاصيل');
+    }
+    
+    fileInput.value = '';
+    document.getElementById('teachersFileName').textContent = '';
   }
 }
 
