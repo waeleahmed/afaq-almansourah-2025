@@ -915,6 +915,7 @@ app.put('/api/admin/students/:id', async (c) => {
 app.delete('/api/admin/students/:id', async (c) => {
   try {
     const id = c.req.param('id')
+    const forceDelete = c.req.query('force') === 'true'
     const db = c.env.DB
     
     // Check if student has evaluations
@@ -924,10 +925,25 @@ app.delete('/api/admin/students/:id', async (c) => {
       .first()
     
     if (evaluations && evaluations.count > 0) {
-      return c.json({ 
-        success: false, 
-        message: 'لا يمكن حذف الطالب لوجود تقييمات مرتبطة به' 
-      }, 400)
+      if (!forceDelete) {
+        return c.json({ 
+          success: false, 
+          message: 'لا يمكن حذف الطالب لوجود تقييمات مرتبطة به',
+          hasEvaluations: true,
+          evaluationCount: evaluations.count
+        }, 400)
+      }
+      
+      // Force delete: Delete evaluations first
+      await db
+        .prepare('DELETE FROM evaluations WHERE student_id = ?')
+        .bind(id)
+        .run()
+      
+      await db
+        .prepare('DELETE FROM evaluation_status WHERE student_id = ?')
+        .bind(id)
+        .run()
     }
     
     await db
@@ -1174,6 +1190,64 @@ app.delete('/api/admin/teachers/:id', async (c) => {
     return c.json({ success: true, message: 'تم حذف المعلم بنجاح' })
   } catch (error) {
     return c.json({ success: false, message: 'حدث خطأ في حذف المعلم' }, 500)
+  }
+})
+
+// Delete all evaluations for a teacher
+app.delete('/api/admin/teachers/:id/evaluations', async (c) => {
+  try {
+    const teacherId = c.req.param('id')
+    const db = c.env.DB
+    
+    // Delete evaluations
+    const result = await db
+      .prepare('DELETE FROM evaluations WHERE teacher_id = ?')
+      .bind(teacherId)
+      .run()
+    
+    // Delete evaluation status
+    await db
+      .prepare('DELETE FROM evaluation_status WHERE teacher_id = ?')
+      .bind(teacherId)
+      .run()
+    
+    return c.json({ 
+      success: true, 
+      message: 'تم حذف جميع التقييمات بنجاح',
+      deletedCount: result.meta.changes || 0
+    })
+  } catch (error) {
+    console.error('Error deleting teacher evaluations:', error)
+    return c.json({ success: false, message: 'حدث خطأ في حذف التقييمات' }, 500)
+  }
+})
+
+// Delete all evaluations for a student
+app.delete('/api/admin/students/:id/evaluations', async (c) => {
+  try {
+    const studentId = c.req.param('id')
+    const db = c.env.DB
+    
+    // Delete evaluations
+    const result = await db
+      .prepare('DELETE FROM evaluations WHERE student_id = ?')
+      .bind(studentId)
+      .run()
+    
+    // Delete evaluation status
+    await db
+      .prepare('DELETE FROM evaluation_status WHERE student_id = ?')
+      .bind(studentId)
+      .run()
+    
+    return c.json({ 
+      success: true, 
+      message: 'تم حذف جميع التقييمات بنجاح',
+      deletedCount: result.meta.changes || 0
+    })
+  } catch (error) {
+    console.error('Error deleting student evaluations:', error)
+    return c.json({ success: false, message: 'حدث خطأ في حذف التقييمات' }, 500)
   }
 })
 
@@ -1552,6 +1626,147 @@ app.get('/', (c) => {
 </body>
 </html>
   `)
+})
+
+// ==========================================
+// Evaluation Management APIs
+// ==========================================
+
+// Get all evaluations for a student (for admin management)
+app.get('/api/admin/students/:id/all-evaluations', async (c) => {
+  try {
+    const studentId = c.req.param('id')
+    const db = c.env.DB
+    
+    const evaluations = await db
+      .prepare(`
+        SELECT 
+          e.id,
+          e.teacher_id,
+          u.full_name as teacher_name,
+          u.subject,
+          e.criteria_id,
+          ec.title as criteria_title,
+          e.score,
+          e.academic_year
+        FROM evaluations e
+        LEFT JOIN users u ON e.teacher_id = u.id
+        LEFT JOIN evaluation_criteria ec ON e.criteria_id = ec.id
+        WHERE e.student_id = ?
+        ORDER BY u.full_name, ec.title
+      `)
+      .bind(studentId)
+      .all()
+    
+    return c.json({ success: true, evaluations: evaluations.results || [] })
+  } catch (error) {
+    console.error('Error fetching student evaluations:', error)
+    return c.json({ success: false, message: 'حدث خطأ في جلب التقييمات' }, 500)
+  }
+})
+
+// Get all evaluations for a teacher (for admin management)
+app.get('/api/admin/teachers/:id/all-evaluations', async (c) => {
+  try {
+    const teacherId = c.req.param('id')
+    const db = c.env.DB
+    
+    const evaluations = await db
+      .prepare(`
+        SELECT 
+          e.id,
+          e.student_id,
+          u.full_name as student_name,
+          u.grade_level,
+          u.class_name,
+          e.criteria_id,
+          ec.title as criteria_title,
+          e.score,
+          e.academic_year
+        FROM evaluations e
+        LEFT JOIN users u ON e.student_id = u.id
+        LEFT JOIN evaluation_criteria ec ON e.criteria_id = ec.id
+        WHERE e.teacher_id = ?
+        ORDER BY u.full_name, ec.title
+      `)
+      .bind(teacherId)
+      .all()
+    
+    return c.json({ success: true, evaluations: evaluations.results || [] })
+  } catch (error) {
+    console.error('Error fetching teacher evaluations:', error)
+    return c.json({ success: false, message: 'حدث خطأ في جلب التقييمات' }, 500)
+  }
+})
+
+// Delete all evaluations for a student
+app.delete('/api/admin/students/:id/evaluations', async (c) => {
+  try {
+    const studentId = c.req.param('id')
+    const db = c.env.DB
+    
+    // Get count first
+    const count = await db
+      .prepare('SELECT COUNT(*) as count FROM evaluations WHERE student_id = ?')
+      .bind(studentId)
+      .first()
+    
+    // Delete evaluations
+    await db
+      .prepare('DELETE FROM evaluations WHERE student_id = ?')
+      .bind(studentId)
+      .run()
+    
+    // Delete evaluation status
+    await db
+      .prepare('DELETE FROM evaluation_status WHERE student_id = ?')
+      .bind(studentId)
+      .run()
+    
+    return c.json({ 
+      success: true, 
+      message: `تم حذف ${count.count} تقييم بنجاح`,
+      deletedCount: count.count
+    })
+  } catch (error) {
+    console.error('Error deleting student evaluations:', error)
+    return c.json({ success: false, message: 'حدث خطأ في حذف التقييمات' }, 500)
+  }
+})
+
+// Delete all evaluations for a teacher
+app.delete('/api/admin/teachers/:id/evaluations', async (c) => {
+  try {
+    const teacherId = c.req.param('id')
+    const db = c.env.DB
+    
+    // Get count first
+    const count = await db
+      .prepare('SELECT COUNT(*) as count FROM evaluations WHERE teacher_id = ?')
+      .bind(teacherId)
+      .first()
+    
+    // Delete evaluations
+    await db
+      .prepare('DELETE FROM evaluations WHERE teacher_id = ?')
+      .bind(teacherId)
+      .run()
+    
+    // Delete evaluation status
+    await db
+      .prepare('DELETE FROM evaluation_status WHERE teacher_id = ?')
+      .bind(teacherId)
+      .run()
+    
+    return c.json({ 
+      success: true, 
+      message: `تم حذف ${count.count} تقييم بنجاح`,
+      deletedCount: count.count
+    })
+  } catch (error) {
+    console.error('Error deleting teacher evaluations:', error)
+    return c.json({ success: false, message: 'حدث خطأ في حذف التقييمات' }, 500)
+  }
 })
 
 export default app

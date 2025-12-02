@@ -164,75 +164,145 @@ function checkAuth() {
 function showLoginPage() {
   const app = document.getElementById('app');
   app.innerHTML = `
-    <div class="max-w-md mx-auto fade-in">
-      <!-- Logo and Title -->
-      <div class="text-center mb-8">
-        <div class="icon-3d inline-block mb-4">
-          <i class="fas fa-chalkboard-teacher text-white" style="font-size: 5rem;"></i>
+    <!-- Formal Landing Page -->
+    <div class="min-h-screen flex flex-col" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+      
+      <!-- Header with Logo -->
+      <div class="text-center pt-12 pb-6">
+        <div class="inline-block mb-4">
+          <img src="/static/images/logo.png" alt="شعار المجمع" class="h-32 w-auto mx-auto drop-shadow-2xl" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+          <div style="display:none;" class="bg-white rounded-full p-6 shadow-2xl">
+            <i class="fas fa-graduation-cap text-purple-600" style="font-size: 4rem;"></i>
+          </div>
         </div>
-        <h1 class="text-5xl font-bold text-white mb-2">معلمي 2025</h1>
-        <p class="text-white text-xl opacity-90">${settings.school_name || 'نظام تقييم المعلمين'}</p>
+        <h1 class="text-4xl md:text-5xl font-bold text-white mb-3 drop-shadow-lg">${settings.school_name || 'المجمع التعليمي'}</h1>
+        <p class="text-xl md:text-2xl text-white opacity-90 drop-shadow">قسم التقييم والجودة</p>
       </div>
 
-      <!-- Login Card -->
-      <div class="glass-card p-8">
-        <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">تسجيل الدخول</h2>
-        
-        <form id="loginForm" class="space-y-6">
-          <div>
-            <label class="block text-gray-700 font-semibold mb-2 text-lg">
-              <i class="fas fa-user ml-2"></i>
-              اسم المستخدم
-            </label>
-            <input 
-              type="text" 
-              id="username" 
-              class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none text-lg"
-              required
-              autocomplete="username"
+      <!-- Main Message Section -->
+      <div class="flex-1 flex items-center justify-center px-4 pb-12">
+        <div class="max-w-4xl w-full">
+          <!-- Message Card -->
+          <div class="glass-card p-8 md:p-12 mb-8">
+            <div class="text-center">
+              <div class="mb-6">
+                <i class="fas fa-comment-dots text-purple-600" style="font-size: 4rem;"></i>
+              </div>
+              <h2 class="text-2xl md:text-4xl font-bold text-gray-800 mb-6 leading-relaxed">
+                صوتك يهمنا، ونحن نقدره، ونسمع لك
+              </h2>
+              <div class="bg-amber-50 border-r-4 border-amber-500 p-6 rounded-lg mb-6">
+                <p class="text-lg md:text-xl text-gray-700 leading-relaxed">
+                  <i class="fas fa-exclamation-triangle text-amber-500 ml-2"></i>
+                  <strong>لكن اعلم أن ما تقوله وما تكتبه</strong>
+                </p>
+                <p class="text-xl md:text-2xl font-bold text-amber-800 mt-3">
+                  سيكون إما شاهد لك أو عليك أمام الله
+                </p>
+              </div>
+              <p class="text-base md:text-lg text-gray-600 leading-relaxed">
+                نحن ملتزمون بتحسين جودة التعليم من خلال آرائكم الصادقة والمسؤولة
+              </p>
+            </div>
+          </div>
+
+          <!-- Login Button -->
+          <div class="text-center">
+            <button 
+              onclick="showLoginForm()" 
+              class="inline-flex items-center gap-3 bg-white hover:bg-gray-50 text-purple-600 font-bold py-4 px-8 rounded-full shadow-2xl transform hover:scale-105 transition-all text-xl"
             >
+              <i class="fas fa-sign-in-alt"></i>
+              <span>تسجيل الدخول</span>
+            </button>
           </div>
-
-          <div>
-            <label class="block text-gray-700 font-semibold mb-2 text-lg">
-              <i class="fas fa-lock ml-2"></i>
-              كلمة المرور
-            </label>
-            <input 
-              type="password" 
-              id="password" 
-              class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none text-lg"
-              required
-              autocomplete="current-password"
-            >
-          </div>
-
-          <div id="loginError" class="hidden bg-red-100 border-r-4 border-red-500 text-red-700 p-4 rounded">
-          </div>
-
-          <button 
-            type="submit" 
-            class="w-full btn-primary text-white py-3 rounded-lg font-bold text-xl shadow-lg"
-          >
-            <i class="fas fa-sign-in-alt ml-2"></i>
-            دخول
-          </button>
-        </form>
-
-        <div class="mt-6 text-center">
-          <button 
-            onclick="showPasswordReset()" 
-            class="text-purple-600 hover:text-purple-800 font-semibold text-lg"
-          >
-            <i class="fas fa-key ml-2"></i>
-            نسيت كلمة المرور؟
-          </button>
         </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="text-center pb-6 text-white opacity-75">
+        <p class="text-sm">معلمي 2025 - نظام تقييم المعلمين</p>
+        <p class="text-xs mt-1">جميع الحقوق محفوظة © ${new Date().getFullYear()}</p>
       </div>
     </div>
   `;
+}
 
+// Show login form modal
+function showLoginForm() {
+  const app = document.getElementById('app');
+  
+  // Create modal overlay
+  const modal = document.createElement('div');
+  modal.id = 'loginModal';
+  modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 fade-in';
+  modal.innerHTML = `
+    <div class="glass-card p-8 max-w-md w-full mx-4 slide-in">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-3xl font-bold text-gray-800">تسجيل الدخول</h2>
+        <button onclick="document.getElementById('loginModal').remove()" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times text-2xl"></i>
+        </button>
+      </div>
+      
+      <form id="loginForm" class="space-y-6">
+        <div>
+          <label class="block text-gray-700 font-semibold mb-2 text-lg">
+            <i class="fas fa-user ml-2"></i>
+            اسم المستخدم
+          </label>
+          <input 
+            type="text" 
+            id="username" 
+            class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none text-lg"
+            required
+            autocomplete="username"
+          >
+        </div>
+
+        <div>
+          <label class="block text-gray-700 font-semibold mb-2 text-lg">
+            <i class="fas fa-lock ml-2"></i>
+            كلمة المرور
+          </label>
+          <input 
+            type="password" 
+            id="password" 
+            class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none text-lg"
+            required
+            autocomplete="current-password"
+          >
+        </div>
+
+        <div id="loginError" class="hidden bg-red-100 border-r-4 border-red-500 text-red-700 p-4 rounded">
+        </div>
+
+        <button 
+          type="submit" 
+          class="w-full btn-primary text-white py-3 rounded-lg font-bold text-xl shadow-lg"
+        >
+          <i class="fas fa-sign-in-alt ml-2"></i>
+          دخول
+        </button>
+      </form>
+
+      <div class="mt-6 text-center">
+        <button 
+          onclick="document.getElementById('loginModal').remove(); showPasswordReset();" 
+          class="text-purple-600 hover:text-purple-800 font-semibold text-lg"
+        >
+          <i class="fas fa-key ml-2"></i>
+          نسيت كلمة المرور؟
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
   document.getElementById('loginForm').addEventListener('submit', handleLogin);
+  
+  // Focus on username field
+  setTimeout(() => document.getElementById('username').focus(), 100);
 }
 
 async function handleLogin(e) {
@@ -248,6 +318,10 @@ async function handleLogin(e) {
     if (response.data.success) {
       currentUser = response.data.user;
       localStorage.setItem('currentUser', JSON.stringify(currentUser));
+      
+      // Close modal if exists
+      const modal = document.getElementById('loginModal');
+      if (modal) modal.remove();
       
       // Show welcome message
       showWelcomeMessage();
@@ -2153,6 +2227,15 @@ async function showStudentsManagement() {
                         >
                           <i class="fas fa-file-alt"></i>
                         </button>
+                        ${student.completed_evaluations > 0 ? `
+                        <button 
+                          onclick="deleteStudentEvaluations(${student.id}, '${student.full_name}', ${student.completed_evaluations})" 
+                          class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm"
+                          title="حذف التقييمات"
+                        >
+                          <i class="fas fa-eraser"></i>
+                        </button>
+                        ` : ''}
                         <button 
                           onclick='editStudent(${JSON.stringify(student)})' 
                           class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
@@ -2394,14 +2477,42 @@ async function deleteStudent(id, name) {
   
   try {
     const response = await axios.delete(`/api/admin/students/${id}`);
+    
     if (response.data.success) {
-      alert('تم حذف الطالب بنجاح!');
+      toast.success('تم حذف الطالب بنجاح!');
       showStudentsManagement();
-    } else {
-      alert(response.data.message);
     }
   } catch (error) {
-    alert(error.response?.data?.message || 'حدث خطأ في حذف الطالب');
+    console.error('Error deleting student:', error);
+    
+    // Check if it's a 400 error with evaluations
+    if (error.response && error.response.status === 400 && error.response.data.hasEvaluations) {
+      const evalCount = error.response.data.evaluationCount;
+      const forceDelete = confirm(
+        `⚠️ تحذير: الطالب "${name}" لديه ${evalCount} تقييم!\n\n` +
+        `هل تريد حذف الطالب مع جميع تقييماته؟\n` +
+        `هذا الإجراء لا يمكن التراجع عنه!`
+      );
+      
+      if (forceDelete) {
+        try {
+          // Force delete with evaluations
+          const forceResponse = await axios.delete(`/api/admin/students/${id}?force=true`);
+          if (forceResponse.data.success) {
+            toast.success(`تم حذف الطالب و${evalCount} تقييم بنجاح`);
+            showStudentsManagement();
+          } else {
+            toast.error('حدث خطأ في الحذف القسري');
+          }
+        } catch (forceError) {
+          console.error('Error force deleting student:', forceError);
+          toast.error('حدث خطأ في الحذف القسري');
+        }
+      }
+    } else {
+      // Other errors
+      toast.error(error.response?.data?.message || 'حدث خطأ في حذف الطالب');
+    }
   }
 }
 
@@ -2472,6 +2583,15 @@ async function showTeachersManagementFull() {
                     </td>
                     <td class="py-3 px-4 text-center">
                       <div class="flex justify-center gap-2">
+                        ${teacher.total_evaluations > 0 ? `
+                        <button 
+                          onclick="deleteTeacherEvaluations(${teacher.id}, '${teacher.full_name}', ${teacher.total_evaluations})" 
+                          class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm"
+                          title="حذف التقييمات"
+                        >
+                          <i class="fas fa-eraser"></i>
+                        </button>
+                        ` : ''}
                         <button 
                           onclick='editTeacher(${JSON.stringify(teacher)})' 
                           class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
@@ -2943,7 +3063,55 @@ async function exportTeacherReportPDF(teacherId, teacherName, subject) {
   await pdfExporter.exportTeacherReport(teacherId);
 }
 
+// ============================================
+// Evaluation Management
+// ============================================
+
+// Delete all evaluations for a student
+async function deleteStudentEvaluations(studentId, studentName, evalCount) {
+  const confirmMessage = `⚠️ تحذير: هل تريد حذف جميع التقييمات (${evalCount} تقييم) للطالب ${studentName}؟\n\nهذا الإجراء لا يمكن التراجع عنه!`;
+  
+  if (!confirm(confirmMessage)) {
+    return;
+  }
+  
+  try {
+    const response = await axios.delete(`/api/admin/students/${studentId}/evaluations`);
+    
+    if (response.data.success) {
+      toast.success(`تم حذف ${response.data.deletedCount} تقييم بنجاح!`);
+      showStudentsManagement();
+    }
+  } catch (error) {
+    console.error('Error deleting student evaluations:', error);
+    toast.error(error.response?.data?.message || 'حدث خطأ في حذف التقييمات');
+  }
+}
+
+// Delete all evaluations for a teacher
+async function deleteTeacherEvaluations(teacherId, teacherName, evalCount) {
+  const confirmMessage = `⚠️ تحذير: هل تريد حذف جميع التقييمات (${evalCount} تقييم) للمعلم ${teacherName}؟\n\nهذا الإجراء لا يمكن التراجع عنه!`;
+  
+  if (!confirm(confirmMessage)) {
+    return;
+  }
+  
+  try {
+    const response = await axios.delete(`/api/admin/teachers/${teacherId}/evaluations`);
+    
+    if (response.data.success) {
+      toast.success(`تم حذف ${response.data.deletedCount} تقييم بنجاح!`);
+      showTeachersManagementFull();
+    }
+  } catch (error) {
+    console.error('Error deleting teacher evaluations:', error);
+    toast.error(error.response?.data?.message || 'حدث خطأ في حذف التقييمات');
+  }
+}
+
+// ============================================
 // Logout
+// ============================================
 function logout() {
   currentUser = null;
   localStorage.removeItem('currentUser');
