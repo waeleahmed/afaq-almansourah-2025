@@ -188,19 +188,10 @@ function showLoginPage() {
               <div class="mb-6">
                 <i class="fas fa-comment-dots text-purple-600" style="font-size: 4rem;"></i>
               </div>
-              <h2 class="text-2xl md:text-4xl font-bold text-gray-800 mb-6 leading-relaxed">
+              <h2 class="text-3xl md:text-5xl font-bold text-gray-800 mb-8 leading-relaxed">
                 صوتك يهمنا، ونحن نقدره، ونسمع لك
               </h2>
-              <div class="bg-amber-50 border-r-4 border-amber-500 p-6 rounded-lg mb-6">
-                <p class="text-lg md:text-xl text-gray-700 leading-relaxed">
-                  <i class="fas fa-exclamation-triangle text-amber-500 ml-2"></i>
-                  <strong>لكن اعلم أن ما تقوله وما تكتبه</strong>
-                </p>
-                <p class="text-xl md:text-2xl font-bold text-amber-800 mt-3">
-                  سيكون إما شاهد لك أو عليك أمام الله
-                </p>
-              </div>
-              <p class="text-base md:text-lg text-gray-600 leading-relaxed">
+              <p class="text-lg md:text-2xl text-gray-600 leading-relaxed">
                 نحن ملتزمون بتحسين جودة التعليم من خلال آرائكم الصادقة والمسؤولة
               </p>
             </div>
@@ -2176,6 +2167,10 @@ async function showStudentsManagement() {
               <p class="text-gray-600 text-lg mt-1">عرض وإدارة جميع الطلاب</p>
             </div>
             <div class="flex gap-4">
+              <button onclick="showBulkDeleteOptions()" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold">
+                <i class="fas fa-trash-alt ml-2"></i>
+                حذف جماعي
+              </button>
               <button onclick="showAddStudentModal()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold">
                 <i class="fas fa-plus ml-2"></i>
                 إضافة طالب جديد
@@ -3106,6 +3101,164 @@ async function deleteTeacherEvaluations(teacherId, teacherName, evalCount) {
   } catch (error) {
     console.error('Error deleting teacher evaluations:', error);
     toast.error(error.response?.data?.message || 'حدث خطأ في حذف التقييمات');
+  }
+}
+
+// ============================================
+// Bulk Student Deletion
+// ============================================
+
+// Show bulk delete options modal
+async function showBulkDeleteOptions() {
+  try {
+    // Fetch classes and grades
+    const [classesRes, gradesRes] = await Promise.all([
+      axios.get('/api/admin/students/classes/list'),
+      axios.get('/api/admin/students/grades/list')
+    ]);
+    
+    const classes = classesRes.data.classes || [];
+    const grades = gradesRes.data.grades || [];
+    
+    const modal = document.getElementById('modalContainer');
+    modal.innerHTML = `
+      <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeModal(event)">
+        <div class="glass-card p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+          <h3 class="text-2xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-trash-alt text-red-500 ml-2"></i>
+            حذف طلاب جماعياً
+          </h3>
+          
+          <div class="bg-red-50 border-r-4 border-red-500 p-4 mb-6">
+            <p class="text-red-700 font-semibold">
+              <i class="fas fa-exclamation-triangle ml-2"></i>
+              تحذير: هذا الإجراء سيحذف الطلاب وجميع تقييماتهم بشكل نهائي ولا يمكن التراجع عنه!
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Delete by Class -->
+            <div class="border-2 border-gray-300 rounded-lg p-6">
+              <h4 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-door-open ml-2"></i>
+                حذف فصل كامل
+              </h4>
+              <p class="text-gray-600 mb-4">اختر الصف والفصل لحذف جميع طلابه</p>
+              
+              ${classes.length > 0 ? `
+                <div class="space-y-3">
+                  ${classes.map(cls => `
+                    <button 
+                      onclick="deleteClassStudents('${cls.grade_level}', '${cls.class_name}', ${cls.student_count})"
+                      class="w-full bg-white hover:bg-red-50 border-2 border-gray-300 hover:border-red-500 p-4 rounded-lg text-right transition-all"
+                    >
+                      <div class="flex justify-between items-center">
+                        <div>
+                          <p class="font-bold text-gray-800">${cls.grade_level} - ${cls.class_name}</p>
+                          <p class="text-sm text-gray-600">${cls.student_count} طالب</p>
+                        </div>
+                        <i class="fas fa-trash text-red-500"></i>
+                      </div>
+                    </button>
+                  `).join('')}
+                </div>
+              ` : '<p class="text-gray-500 text-center">لا توجد فصول</p>'}
+            </div>
+
+            <!-- Delete by Grade -->
+            <div class="border-2 border-gray-300 rounded-lg p-6">
+              <h4 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-layer-group ml-2"></i>
+                حذف صف كامل
+              </h4>
+              <p class="text-gray-600 mb-4">اختر الصف لحذف جميع طلابه من كل الفصول</p>
+              
+              ${grades.length > 0 ? `
+                <div class="space-y-3">
+                  ${grades.map(grade => `
+                    <button 
+                      onclick="deleteGradeStudents('${grade.grade_level}', ${grade.student_count})"
+                      class="w-full bg-white hover:bg-red-50 border-2 border-gray-300 hover:border-red-500 p-4 rounded-lg text-right transition-all"
+                    >
+                      <div class="flex justify-between items-center">
+                        <div>
+                          <p class="font-bold text-gray-800">${grade.grade_level}</p>
+                          <p class="text-sm text-gray-600">${grade.student_count} طالب</p>
+                        </div>
+                        <i class="fas fa-trash text-red-500"></i>
+                      </div>
+                    </button>
+                  `).join('')}
+                </div>
+              ` : '<p class="text-gray-500 text-center">لا توجد صفوف</p>'}
+            </div>
+          </div>
+
+          <div class="mt-6 flex justify-end">
+            <button onclick="closeModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold">
+              إلغاء
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  } catch (error) {
+    console.error('Error loading bulk delete options:', error);
+    toast.error('حدث خطأ في تحميل خيارات الحذف الجماعي');
+  }
+}
+
+// Delete all students in a class
+async function deleteClassStudents(gradeLevel, className, studentCount) {
+  const confirmMessage = `⚠️ تحذير خطير!\n\nهل تريد حذف جميع الطلاب (${studentCount} طالب) من:\n${gradeLevel} - ${className}\n\nسيتم حذف:\n• جميع الطلاب\n• جميع تقييماتهم\n\nهذا الإجراء لا يمكن التراجع عنه!\n\nهل أنت متأكد؟`;
+  
+  if (!confirm(confirmMessage)) {
+    return;
+  }
+  
+  // Second confirmation
+  if (!confirm('تأكيد نهائي: هل أنت متأكد 100% من حذف هذا الفصل؟')) {
+    return;
+  }
+  
+  try {
+    const response = await axios.delete(`/api/admin/students/class/${encodeURIComponent(gradeLevel)}/${encodeURIComponent(className)}`);
+    
+    if (response.data.success) {
+      toast.success(response.data.message);
+      closeModal();
+      showStudentsManagement();
+    }
+  } catch (error) {
+    console.error('Error deleting class students:', error);
+    toast.error(error.response?.data?.message || 'حدث خطأ في حذف طلاب الفصل');
+  }
+}
+
+// Delete all students in a grade
+async function deleteGradeStudents(gradeLevel, studentCount) {
+  const confirmMessage = `⚠️ تحذير خطير جداً!\n\nهل تريد حذف جميع الطلاب (${studentCount} طالب) من:\n${gradeLevel}\n(من جميع الفصول)\n\nسيتم حذف:\n• جميع الطلاب في هذا الصف\n• جميع تقييماتهم\n\nهذا الإجراء لا يمكن التراجع عنه!\n\nهل أنت متأكد؟`;
+  
+  if (!confirm(confirmMessage)) {
+    return;
+  }
+  
+  // Second confirmation
+  if (!confirm('تأكيد نهائي: هل أنت متأكد 100% من حذف هذا الصف بالكامل؟')) {
+    return;
+  }
+  
+  try {
+    const response = await axios.delete(`/api/admin/students/grade/${encodeURIComponent(gradeLevel)}`);
+    
+    if (response.data.success) {
+      toast.success(response.data.message);
+      closeModal();
+      showStudentsManagement();
+    }
+  } catch (error) {
+    console.error('Error deleting grade students:', error);
+    toast.error(error.response?.data?.message || 'حدث خطأ في حذف طلاب الصف');
   }
 }
 

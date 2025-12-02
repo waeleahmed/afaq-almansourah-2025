@@ -1769,4 +1769,174 @@ app.delete('/api/admin/teachers/:id/evaluations', async (c) => {
   }
 })
 
+// ==========================================
+// Bulk Student Deletion APIs
+// ==========================================
+
+// Get list of all classes (فصول) grouped by grade
+app.get('/api/admin/students/classes/list', async (c) => {
+  try {
+    const db = c.env.DB
+    
+    const classes = await db
+      .prepare(`
+        SELECT DISTINCT grade_level, class_name, 
+               COUNT(*) as student_count
+        FROM users 
+        WHERE user_type = 'student'
+        GROUP BY grade_level, class_name
+        ORDER BY grade_level, class_name
+      `)
+      .all()
+    
+    return c.json({ success: true, classes: classes.results || [] })
+  } catch (error) {
+    console.error('Error fetching classes:', error)
+    return c.json({ success: false, message: 'حدث خطأ في جلب الفصول' }, 500)
+  }
+})
+
+// Get list of all grades (صفوف)
+app.get('/api/admin/students/grades/list', async (c) => {
+  try {
+    const db = c.env.DB
+    
+    const grades = await db
+      .prepare(`
+        SELECT grade_level, COUNT(*) as student_count
+        FROM users 
+        WHERE user_type = 'student'
+        GROUP BY grade_level
+        ORDER BY grade_level
+      `)
+      .all()
+    
+    return c.json({ success: true, grades: grades.results || [] })
+  } catch (error) {
+    console.error('Error fetching grades:', error)
+    return c.json({ success: false, message: 'حدث خطأ في جلب الصفوف' }, 500)
+  }
+})
+
+// Delete all students in a specific class (فصل)
+app.delete('/api/admin/students/class/:gradeLevel/:className', async (c) => {
+  try {
+    const gradeLevel = c.req.param('gradeLevel')
+    const className = c.req.param('className')
+    const db = c.env.DB
+    
+    // Get student IDs in this class
+    const students = await db
+      .prepare(`
+        SELECT id FROM users 
+        WHERE user_type = 'student' 
+        AND grade_level = ? 
+        AND class_name = ?
+      `)
+      .bind(gradeLevel, className)
+      .all()
+    
+    const studentIds = students.results.map(s => s.id)
+    
+    if (studentIds.length === 0) {
+      return c.json({ 
+        success: false, 
+        message: 'لا توجد طلاب في هذا الفصل' 
+      }, 404)
+    }
+    
+    // Delete evaluations for these students
+    for (const id of studentIds) {
+      await db
+        .prepare('DELETE FROM evaluations WHERE student_id = ?')
+        .bind(id)
+        .run()
+      
+      await db
+        .prepare('DELETE FROM evaluation_status WHERE student_id = ?')
+        .bind(id)
+        .run()
+    }
+    
+    // Delete students
+    await db
+      .prepare(`
+        DELETE FROM users 
+        WHERE user_type = 'student' 
+        AND grade_level = ? 
+        AND class_name = ?
+      `)
+      .bind(gradeLevel, className)
+      .run()
+    
+    return c.json({ 
+      success: true, 
+      message: `تم حذف ${studentIds.length} طالب من ${gradeLevel} - ${className}`,
+      deletedCount: studentIds.length
+    })
+  } catch (error) {
+    console.error('Error deleting class students:', error)
+    return c.json({ success: false, message: 'حدث خطأ في حذف طلاب الفصل' }, 500)
+  }
+})
+
+// Delete all students in a specific grade (صف)
+app.delete('/api/admin/students/grade/:gradeLevel', async (c) => {
+  try {
+    const gradeLevel = c.req.param('gradeLevel')
+    const db = c.env.DB
+    
+    // Get student IDs in this grade
+    const students = await db
+      .prepare(`
+        SELECT id FROM users 
+        WHERE user_type = 'student' 
+        AND grade_level = ?
+      `)
+      .bind(gradeLevel)
+      .all()
+    
+    const studentIds = students.results.map(s => s.id)
+    
+    if (studentIds.length === 0) {
+      return c.json({ 
+        success: false, 
+        message: 'لا توجد طلاب في هذا الصف' 
+      }, 404)
+    }
+    
+    // Delete evaluations for these students
+    for (const id of studentIds) {
+      await db
+        .prepare('DELETE FROM evaluations WHERE student_id = ?')
+        .bind(id)
+        .run()
+      
+      await db
+        .prepare('DELETE FROM evaluation_status WHERE student_id = ?')
+        .bind(id)
+        .run()
+    }
+    
+    // Delete students
+    await db
+      .prepare(`
+        DELETE FROM users 
+        WHERE user_type = 'student' 
+        AND grade_level = ?
+      `)
+      .bind(gradeLevel)
+      .run()
+    
+    return c.json({ 
+      success: true, 
+      message: `تم حذف ${studentIds.length} طالب من ${gradeLevel}`,
+      deletedCount: studentIds.length
+    })
+  } catch (error) {
+    console.error('Error deleting grade students:', error)
+    return c.json({ success: false, message: 'حدث خطأ في حذف طلاب الصف' }, 500)
+  }
+})
+
 export default app
