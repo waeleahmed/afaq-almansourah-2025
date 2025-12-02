@@ -1,0 +1,600 @@
+import { Hono } from 'hono'
+import { cors } from 'hono/cors'
+import { serveStatic } from 'hono/cloudflare-workers'
+
+// Types
+type Bindings = {
+  DB: D1Database
+}
+
+const app = new Hono<{ Bindings: Bindings }>()
+
+// Enable CORS
+app.use('/api/*', cors())
+
+// Serve static files
+app.use('/static/*', serveStatic({ root: './public' }))
+
+// ============================================
+// Database Initialization
+// ============================================
+
+// Initialize database with schema and seed data
+app.post('/api/init-db', async (c) => {
+  try {
+    const db = c.env.DB
+
+    // Create tables
+    await db.batch([
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT UNIQUE NOT NULL,
+          password TEXT NOT NULL,
+          full_name TEXT NOT NULL,
+          email TEXT,
+          phone TEXT,
+          user_type TEXT NOT NULL CHECK(user_type IN ('student', 'admin')),
+          grade_level TEXT,
+          class_name TEXT,
+          student_id TEXT,
+          gender TEXT CHECK(gender IN ('male', 'female')),
+          reset_token TEXT,
+          reset_token_expiry DATETIME,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `),
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS teachers (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          full_name TEXT NOT NULL,
+          subject TEXT NOT NULL,
+          specialization TEXT,
+          email TEXT,
+          phone TEXT,
+          gender TEXT CHECK(gender IN ('male', 'female')),
+          employee_id TEXT UNIQUE,
+          photo_url TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `),
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS teacher_classes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          teacher_id INTEGER NOT NULL,
+          grade_level TEXT NOT NULL,
+          class_name TEXT NOT NULL,
+          subject TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE
+        )
+      `),
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS evaluation_criteria (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          description TEXT,
+          max_score INTEGER NOT NULL DEFAULT 10,
+          display_order INTEGER NOT NULL DEFAULT 0,
+          is_active INTEGER NOT NULL DEFAULT 1,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `),
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS evaluations (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          student_id INTEGER NOT NULL,
+          teacher_id INTEGER NOT NULL,
+          criteria_id INTEGER NOT NULL,
+          score INTEGER NOT NULL,
+          grade_level TEXT NOT NULL,
+          class_name TEXT NOT NULL,
+          subject TEXT NOT NULL,
+          academic_year TEXT NOT NULL DEFAULT '2025',
+          evaluation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+          FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+          FOREIGN KEY (criteria_id) REFERENCES evaluation_criteria(id) ON DELETE CASCADE
+        )
+      `),
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS evaluation_status (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          student_id INTEGER NOT NULL,
+          teacher_id INTEGER NOT NULL,
+          grade_level TEXT NOT NULL,
+          class_name TEXT NOT NULL,
+          subject TEXT NOT NULL,
+          is_completed INTEGER NOT NULL DEFAULT 0,
+          completed_at DATETIME,
+          academic_year TEXT NOT NULL DEFAULT '2025',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+          FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+          UNIQUE(student_id, teacher_id, academic_year, subject)
+        )
+      `),
+      db.prepare(`
+        CREATE TABLE IF NOT EXISTS settings (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          setting_key TEXT UNIQUE NOT NULL,
+          setting_value TEXT NOT NULL,
+          description TEXT,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `)
+    ])
+
+    // Insert seed data
+    await db.batch([
+      // Admin user
+      db.prepare("INSERT OR IGNORE INTO users (username, password, full_name, user_type, email) VALUES ('admin', 'admin123', 'مدير النظام', 'admin', 'admin@school.edu.sa')"),
+      
+      // Evaluation criteria
+      db.prepare("INSERT OR IGNORE INTO evaluation_criteria (id, title, description, max_score, display_order, is_active) VALUES (1, 'مدى الاستيعاب', 'قدرة المعلم على إيصال المعلومات بشكل واضح وسهل الفهم', 10, 1, 1)"),
+      db.prepare("INSERT OR IGNORE INTO evaluation_criteria (id, title, description, max_score, display_order, is_active) VALUES (2, 'طريقة الشرح', 'فعالية أسلوب التدريس والتوضيح', 10, 2, 1)"),
+      db.prepare("INSERT OR IGNORE INTO evaluation_criteria (id, title, description, max_score, display_order, is_active) VALUES (3, 'الاهتمام بتصحيح الواجبات', 'مدى متابعة وتصحيح الواجبات المدرسية', 10, 3, 1)"),
+      db.prepare("INSERT OR IGNORE INTO evaluation_criteria (id, title, description, max_score, display_order, is_active) VALUES (4, 'عدم تضييع وقت الحصة', 'استثمار وقت الحصة بشكل فعال', 10, 4, 1)"),
+      db.prepare("INSERT OR IGNORE INTO evaluation_criteria (id, title, description, max_score, display_order, is_active) VALUES (5, 'مراعاة ظروف الطلاب', 'التعامل مع الطلاب بمرونة وتفهم', 10, 5, 1)"),
+      db.prepare("INSERT OR IGNORE INTO evaluation_criteria (id, title, description, max_score, display_order, is_active) VALUES (6, 'توصيل المعلومات', 'وضوح وفعالية إيصال المعلومات للطلاب', 10, 6, 1)"),
+      
+      // Teachers
+      db.prepare("INSERT OR IGNORE INTO teachers (id, full_name, subject, specialization, employee_id, gender) VALUES (1, 'أحمد محمد السالم', 'رياضيات', 'رياضيات', 'T001', 'male')"),
+      db.prepare("INSERT OR IGNORE INTO teachers (id, full_name, subject, specialization, employee_id, gender) VALUES (2, 'فاطمة عبدالله الغامدي', 'لغة عربية', 'لغة عربية', 'T002', 'female')"),
+      db.prepare("INSERT OR IGNORE INTO teachers (id, full_name, subject, specialization, employee_id, gender) VALUES (3, 'خالد عبدالعزيز القحطاني', 'علوم', 'فيزياء', 'T003', 'male')"),
+      db.prepare("INSERT OR IGNORE INTO teachers (id, full_name, subject, specialization, employee_id, gender) VALUES (4, 'نورة سعد الشهري', 'لغة إنجليزية', 'لغة إنجليزية', 'T004', 'female')"),
+      db.prepare("INSERT OR IGNORE INTO teachers (id, full_name, subject, specialization, employee_id, gender) VALUES (5, 'محمد علي الحربي', 'تربية إسلامية', 'شريعة', 'T005', 'male')"),
+      
+      // Teacher classes - متوسط أول - فصل أ
+      db.prepare("INSERT OR IGNORE INTO teacher_classes (teacher_id, grade_level, class_name, subject) VALUES (1, 'متوسط أول', '1أ', 'رياضيات')"),
+      db.prepare("INSERT OR IGNORE INTO teacher_classes (teacher_id, grade_level, class_name, subject) VALUES (2, 'متوسط أول', '1أ', 'لغة عربية')"),
+      db.prepare("INSERT OR IGNORE INTO teacher_classes (teacher_id, grade_level, class_name, subject) VALUES (3, 'متوسط أول', '1أ', 'علوم')"),
+      db.prepare("INSERT OR IGNORE INTO teacher_classes (teacher_id, grade_level, class_name, subject) VALUES (4, 'متوسط أول', '1أ', 'لغة إنجليزية')"),
+      db.prepare("INSERT OR IGNORE INTO teacher_classes (teacher_id, grade_level, class_name, subject) VALUES (5, 'متوسط أول', '1أ', 'تربية إسلامية')"),
+      
+      // Teacher classes - متوسط أول - فصل ب
+      db.prepare("INSERT OR IGNORE INTO teacher_classes (teacher_id, grade_level, class_name, subject) VALUES (1, 'متوسط أول', '1ب', 'رياضيات')"),
+      db.prepare("INSERT OR IGNORE INTO teacher_classes (teacher_id, grade_level, class_name, subject) VALUES (2, 'متوسط أول', '1ب', 'لغة عربية')"),
+      db.prepare("INSERT OR IGNORE INTO teacher_classes (teacher_id, grade_level, class_name, subject) VALUES (3, 'متوسط أول', '1ب', 'علوم')"),
+      db.prepare("INSERT OR IGNORE INTO teacher_classes (teacher_id, grade_level, class_name, subject) VALUES (4, 'متوسط أول', '1ب', 'لغة إنجليزية')"),
+      db.prepare("INSERT OR IGNORE INTO teacher_classes (teacher_id, grade_level, class_name, subject) VALUES (5, 'متوسط أول', '1ب', 'تربية إسلامية')"),
+      
+      // Students - متوسط أول - فصل أ
+      db.prepare("INSERT OR IGNORE INTO users (username, password, full_name, user_type, grade_level, class_name, student_id, gender) VALUES ('student1', 'pass123', 'عبدالرحمن أحمد الزهراني', 'student', 'متوسط أول', '1أ', 'S1001', 'male')"),
+      db.prepare("INSERT OR IGNORE INTO users (username, password, full_name, user_type, grade_level, class_name, student_id, gender) VALUES ('student2', 'pass123', 'عمر محمد العمري', 'student', 'متوسط أول', '1أ', 'S1002', 'male')"),
+      db.prepare("INSERT OR IGNORE INTO users (username, password, full_name, user_type, grade_level, class_name, student_id, gender) VALUES ('student3', 'pass123', 'فيصل خالد المطيري', 'student', 'متوسط أول', '1أ', 'S1003', 'male')"),
+      db.prepare("INSERT OR IGNORE INTO users (username, password, full_name, user_type, grade_level, class_name, student_id, gender) VALUES ('student4', 'pass123', 'سارة علي السبيعي', 'student', 'متوسط أول', '1أ', 'S1004', 'female')"),
+      db.prepare("INSERT OR IGNORE INTO users (username, password, full_name, user_type, grade_level, class_name, student_id, gender) VALUES ('student5', 'pass123', 'مريم سعد الدوسري', 'student', 'متوسط أول', '1أ', 'S1005', 'female')"),
+      
+      // Students - متوسط أول - فصل ب
+      db.prepare("INSERT OR IGNORE INTO users (username, password, full_name, user_type, grade_level, class_name, student_id, gender) VALUES ('student6', 'pass123', 'يوسف فهد الشمري', 'student', 'متوسط أول', '1ب', 'S1006', 'male')"),
+      db.prepare("INSERT OR IGNORE INTO users (username, password, full_name, user_type, grade_level, class_name, student_id, gender) VALUES ('student7', 'pass123', 'منصور ناصر القرني', 'student', 'متوسط أول', '1ب', 'S1007', 'male')"),
+      db.prepare("INSERT OR IGNORE INTO users (username, password, full_name, user_type, grade_level, class_name, student_id, gender) VALUES ('student8', 'pass123', 'لمى عبدالله الحربي', 'student', 'متوسط أول', '1ب', 'S1008', 'female')"),
+      db.prepare("INSERT OR IGNORE INTO users (username, password, full_name, user_type, grade_level, class_name, student_id, gender) VALUES ('student9', 'pass123', 'ريم محمد الغامدي', 'student', 'متوسط أول', '1ب', 'S1009', 'female')"),
+      db.prepare("INSERT OR IGNORE INTO users (username, password, full_name, user_type, grade_level, class_name, student_id, gender) VALUES ('student10', 'pass123', 'نواف عبدالعزيز العتيبي', 'student', 'متوسط أول', '1ب', 'S1010', 'male')"),
+      
+      // Settings
+      db.prepare("INSERT OR IGNORE INTO settings (setting_key, setting_value, description) VALUES ('school_name', 'مدرسة النموذجية المتوسطة', 'اسم المؤسسة التعليمية')"),
+      db.prepare("INSERT OR IGNORE INTO settings (setting_key, setting_value, description) VALUES ('school_logo', '/static/images/logo.png', 'شعار المؤسسة التعليمية')"),
+      db.prepare("INSERT OR IGNORE INTO settings (setting_key, setting_value, description) VALUES ('academic_year', '2025', 'السنة الأكاديمية الحالية')"),
+      db.prepare("INSERT OR IGNORE INTO settings (setting_key, setting_value, description) VALUES ('evaluation_enabled', 'true', 'تفعيل نظام التقييم')"),
+      db.prepare("INSERT OR IGNORE INTO settings (setting_key, setting_value, description) VALUES ('min_evaluations', '5', 'الحد الأدنى لعدد التقييمات لظهور النتائج')")
+    ])
+
+    return c.json({ success: true, message: 'تم تهيئة قاعدة البيانات بنجاح' })
+  } catch (error: any) {
+    console.error('Database initialization error:', error)
+    return c.json({ success: false, message: 'حدث خطأ في تهيئة قاعدة البيانات', error: error.message }, 500)
+  }
+})
+
+// ============================================
+// API Routes - Authentication
+// ============================================
+
+// Login endpoint
+app.post('/api/auth/login', async (c) => {
+  try {
+    const { username, password } = await c.req.json()
+    const db = c.env.DB
+
+    const user = await db
+      .prepare('SELECT * FROM users WHERE username = ? AND password = ?')
+      .bind(username, password)
+      .first()
+
+    if (!user) {
+      return c.json({ success: false, message: 'اسم المستخدم أو كلمة المرور غير صحيحة' }, 401)
+    }
+
+    return c.json({
+      success: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        full_name: user.full_name,
+        user_type: user.user_type,
+        grade_level: user.grade_level,
+        class_name: user.class_name,
+        student_id: user.student_id
+      }
+    })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في الخادم' }, 500)
+  }
+})
+
+// Password reset request
+app.post('/api/auth/reset-request', async (c) => {
+  try {
+    const { username } = await c.req.json()
+    const db = c.env.DB
+
+    const user = await db
+      .prepare('SELECT id, username, full_name FROM users WHERE username = ?')
+      .bind(username)
+      .first()
+
+    if (!user) {
+      return c.json({ success: false, message: 'اسم المستخدم غير موجود' }, 404)
+    }
+
+    // Generate reset token (in production, this should be sent via email)
+    const resetToken = Math.random().toString(36).substring(2, 15)
+    const expiry = new Date(Date.now() + 3600000).toISOString() // 1 hour
+
+    await db
+      .prepare('UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE id = ?')
+      .bind(resetToken, expiry, user.id)
+      .run()
+
+    return c.json({
+      success: true,
+      message: 'تم إرسال رمز إعادة تعيين كلمة المرور',
+      resetToken // In production, send via email instead
+    })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في الخادم' }, 500)
+  }
+})
+
+// Password reset
+app.post('/api/auth/reset-password', async (c) => {
+  try {
+    const { username, resetToken, newPassword } = await c.req.json()
+    const db = c.env.DB
+
+    const user = await db
+      .prepare('SELECT id FROM users WHERE username = ? AND reset_token = ? AND reset_token_expiry > datetime("now")')
+      .bind(username, resetToken)
+      .first()
+
+    if (!user) {
+      return c.json({ success: false, message: 'رمز إعادة التعيين غير صحيح أو منتهي الصلاحية' }, 400)
+    }
+
+    await db
+      .prepare('UPDATE users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE id = ?')
+      .bind(newPassword, user.id)
+      .run()
+
+    return c.json({ success: true, message: 'تم تحديث كلمة المرور بنجاح' })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في الخادم' }, 500)
+  }
+})
+
+// ============================================
+// API Routes - Teachers
+// ============================================
+
+// Get teachers for student's class
+app.get('/api/teachers/:gradeLevel/:className', async (c) => {
+  try {
+    const gradeLevel = c.req.param('gradeLevel')
+    const className = c.req.param('className')
+    const db = c.env.DB
+
+    const teachers = await db
+      .prepare(`
+        SELECT DISTINCT t.id, t.full_name, tc.subject, t.photo_url
+        FROM teachers t
+        JOIN teacher_classes tc ON t.id = tc.teacher_id
+        WHERE tc.grade_level = ? AND tc.class_name = ?
+        ORDER BY tc.subject
+      `)
+      .bind(gradeLevel, className)
+      .all()
+
+    return c.json({ success: true, teachers: teachers.results })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في جلب بيانات المعلمين' }, 500)
+  }
+})
+
+// ============================================
+// API Routes - Evaluation Criteria
+// ============================================
+
+// Get active evaluation criteria
+app.get('/api/criteria', async (c) => {
+  try {
+    const db = c.env.DB
+
+    const criteria = await db
+      .prepare('SELECT * FROM evaluation_criteria WHERE is_active = 1 ORDER BY display_order')
+      .all()
+
+    return c.json({ success: true, criteria: criteria.results })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في جلب معايير التقييم' }, 500)
+  }
+})
+
+// ============================================
+// API Routes - Evaluations
+// ============================================
+
+// Check if student has already evaluated a teacher
+app.get('/api/evaluation/status/:studentId/:teacherId', async (c) => {
+  try {
+    const studentId = c.req.param('studentId')
+    const teacherId = c.req.param('teacherId')
+    const db = c.env.DB
+
+    const status = await db
+      .prepare(`
+        SELECT is_completed, completed_at 
+        FROM evaluation_status 
+        WHERE student_id = ? AND teacher_id = ? AND academic_year = '2025'
+      `)
+      .bind(studentId, teacherId)
+      .first()
+
+    return c.json({ 
+      success: true, 
+      completed: status ? status.is_completed === 1 : false,
+      completedAt: status?.completed_at 
+    })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في التحقق من حالة التقييم' }, 500)
+  }
+})
+
+// Submit evaluation
+app.post('/api/evaluation/submit', async (c) => {
+  try {
+    const { studentId, teacherId, gradeLevel, className, subject, evaluations } = await c.req.json()
+    const db = c.env.DB
+
+    // Check if already evaluated
+    const existing = await db
+      .prepare('SELECT id FROM evaluation_status WHERE student_id = ? AND teacher_id = ? AND academic_year = ?')
+      .bind(studentId, teacherId, '2025')
+      .first()
+
+    if (existing && existing.is_completed === 1) {
+      return c.json({ success: false, message: 'لقد قمت بتقييم هذا المعلم مسبقاً' }, 400)
+    }
+
+    // Insert evaluations
+    for (const evaluation of evaluations) {
+      await db
+        .prepare(`
+          INSERT INTO evaluations (student_id, teacher_id, criteria_id, score, grade_level, class_name, subject, academic_year)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `)
+        .bind(
+          studentId,
+          teacherId,
+          evaluation.criteriaId,
+          evaluation.score,
+          gradeLevel,
+          className,
+          subject,
+          '2025'
+        )
+        .run()
+    }
+
+    // Update evaluation status
+    if (existing) {
+      await db
+        .prepare('UPDATE evaluation_status SET is_completed = 1, completed_at = datetime("now") WHERE id = ?')
+        .bind(existing.id)
+        .run()
+    } else {
+      await db
+        .prepare(`
+          INSERT INTO evaluation_status (student_id, teacher_id, grade_level, class_name, subject, is_completed, completed_at, academic_year)
+          VALUES (?, ?, ?, ?, ?, 1, datetime("now"), ?)
+        `)
+        .bind(studentId, teacherId, gradeLevel, className, subject, '2025')
+        .run()
+    }
+
+    return c.json({ success: true, message: 'تم تسجيل التقييم بنجاح' })
+  } catch (error) {
+    console.error('Error submitting evaluation:', error)
+    return c.json({ success: false, message: 'حدث خطأ في تسجيل التقييم' }, 500)
+  }
+})
+
+// ============================================
+// API Routes - Admin Reports
+// ============================================
+
+// Get teacher report
+app.get('/api/admin/teacher-report/:teacherId', async (c) => {
+  try {
+    const teacherId = c.req.param('teacherId')
+    const db = c.env.DB
+
+    // Get teacher info
+    const teacher = await db
+      .prepare('SELECT * FROM teachers WHERE id = ?')
+      .bind(teacherId)
+      .first()
+
+    if (!teacher) {
+      return c.json({ success: false, message: 'المعلم غير موجود' }, 404)
+    }
+
+    // Get evaluation statistics
+    const stats = await db
+      .prepare(`
+        SELECT 
+          ec.title as criteria_title,
+          ec.max_score,
+          AVG(e.score) as avg_score,
+          COUNT(e.id) as evaluation_count
+        FROM evaluations e
+        JOIN evaluation_criteria ec ON e.criteria_id = ec.id
+        WHERE e.teacher_id = ? AND e.academic_year = '2025'
+        GROUP BY e.criteria_id, ec.title, ec.max_score
+        ORDER BY ec.display_order
+      `)
+      .bind(teacherId)
+      .all()
+
+    // Get class-wise statistics
+    const clasStats = await db
+      .prepare(`
+        SELECT 
+          class_name,
+          COUNT(DISTINCT student_id) as student_count,
+          AVG(score) as avg_score
+        FROM evaluations
+        WHERE teacher_id = ? AND academic_year = '2025'
+        GROUP BY class_name
+      `)
+      .bind(teacherId)
+      .all()
+
+    return c.json({
+      success: true,
+      teacher,
+      criteriaStats: stats.results,
+      classStats: clasStats.results
+    })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في جلب تقرير المعلم' }, 500)
+  }
+})
+
+// Get settings
+app.get('/api/settings', async (c) => {
+  try {
+    const db = c.env.DB
+    const settings = await db.prepare('SELECT * FROM settings').all()
+    
+    const settingsObj: Record<string, string> = {}
+    settings.results.forEach((setting: any) => {
+      settingsObj[setting.setting_key] = setting.setting_value
+    })
+
+    return c.json({ success: true, settings: settingsObj })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في جلب الإعدادات' }, 500)
+  }
+})
+
+// ============================================
+// Main HTML Page
+// ============================================
+app.get('/', (c) => {
+  return c.html(`
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>معلمي 2025 - نظام تقييم المعلمين</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/styles.css" rel="stylesheet">
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+      
+      * {
+        font-family: 'Tajawal', sans-serif;
+      }
+      
+      body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+      
+      .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 24px;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+      }
+      
+      .icon-3d {
+        filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+        transition: transform 0.3s ease;
+      }
+      
+      .icon-3d:hover {
+        transform: translateY(-5px) scale(1.05);
+      }
+      
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        transition: all 0.3s ease;
+      }
+      
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+      }
+      
+      .rating-star {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 2.5rem;
+      }
+      
+      .rating-star:hover,
+      .rating-star.active {
+        color: #fbbf24;
+        transform: scale(1.1);
+      }
+      
+      .fade-in {
+        animation: fadeIn 0.5s ease-in;
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      .slide-in {
+        animation: slideIn 0.5s ease-out;
+      }
+      
+      @keyframes slideIn {
+        from { transform: translateX(-100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+    </style>
+</head>
+<body>
+    <div id="app" class="min-h-screen py-8 px-4"></div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
+  `)
+})
+
+export default app
