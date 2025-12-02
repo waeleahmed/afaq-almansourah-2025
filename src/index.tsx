@@ -990,8 +990,9 @@ app.post('/api/admin/students/bulk-upload', async (c) => {
         
         inserted++
       } catch (error) {
+        console.error(`Error inserting student ${student.full_name}:`, error)
         skipped++
-        errors.push(`خطأ في الصف: ${student.full_name}`)
+        errors.push(`خطأ في الصف: ${student.full_name} - ${error.message || 'خطأ غير معروف'}`)
       }
     }
     

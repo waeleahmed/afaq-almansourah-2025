@@ -221,10 +221,18 @@ class ExcelHandler {
 
       // Parse Excel file
       const data = await this.parseExcelFile(file);
+      console.log('Parsed Excel data:', data);
+      console.log('Number of rows:', data ? data.length : 0);
       
       if (!data || data.length === 0) {
         toast.error('الملف فارغ أو غير صحيح');
-        return;
+        return { success: false, inserted: 0, skipped: 0 };
+      }
+
+      // Log first row to check column names
+      if (data.length > 0) {
+        console.log('Column names in first row:', Object.keys(data[0]));
+        console.log('First row data:', data[0]);
       }
 
       // Validate and prepare data
@@ -232,7 +240,19 @@ class ExcelHandler {
         // Check required fields
         if (!row['الرقم الطلابي'] || !row['الاسم الكامل'] || !row['اسم المستخدم'] || 
             !row['كلمة المرور'] || !row['الصف'] || !row['الفصل']) {
-          throw new Error(`الصف ${index + 2}: بيانات ناقصة`);
+          console.error(`Row ${index + 2} missing data:`, row);
+          throw new Error(`الصف ${index + 2}: بيانات ناقصة - تأكد من ملء جميع الحقول المطلوبة`);
+        }
+
+        // Convert Arabic gender to English
+        let gender = null;
+        if (row['الجنس']) {
+          const genderValue = row['الجنس'].trim();
+          if (genderValue === 'ذكر' || genderValue === 'male') {
+            gender = 'male';
+          } else if (genderValue === 'أنثى' || genderValue === 'female') {
+            gender = 'female';
+          }
         }
 
         return {
@@ -244,27 +264,44 @@ class ExcelHandler {
           class_name: row['الفصل'],
           email: row['البريد الإلكتروني'] || null,
           phone: row['رقم الهاتف'] || null,
-          gender: row['الجنس'] || null
+          gender: gender
         };
       });
+      
+      console.log('Prepared students data:', students);
+      console.log('Sending to server:', students.length, 'students');
 
       // Send to server
+      console.log('Sending POST request to /api/admin/students/bulk-upload');
       const response = await axios.post('/api/admin/students/bulk-upload', { students });
+      console.log('Server response:', response.data);
       
       if (response.data.success) {
-        toast.success(`تم رفع ${response.data.inserted} طالب بنجاح`);
+        if (response.data.inserted > 0) {
+          toast.success(`تم رفع ${response.data.inserted} طالب بنجاح`);
+        }
         if (response.data.skipped > 0) {
-          toast.warning(`تم تخطي ${response.data.skipped} طالب (مكررين)`);
+          toast.warning(`تم تخطي ${response.data.skipped} طالب (مكررين أو أخطاء)`);
+        }
+        if (response.data.errors && response.data.errors.length > 0) {
+          console.log('Errors from server:', response.data.errors);
         }
         return response.data;
       } else {
         toast.error(response.data.message || 'فشل في رفع البيانات');
-        return null;
+        return { success: false, inserted: 0, skipped: 0 };
       }
     } catch (error) {
       console.error('Error uploading students:', error);
-      toast.error(error.message || 'حدث خطأ أثناء معالجة الملف');
-      return null;
+      if (error.response) {
+        console.error('Server error response:', error.response.data);
+        toast.error(error.response.data.message || 'خطأ من الخادم');
+      } else if (error.request) {
+        toast.error('فشل الاتصال بالخادم');
+      } else {
+        toast.error(error.message || 'حدث خطأ أثناء معالجة الملف');
+      }
+      return { success: false, inserted: 0, skipped: 0 };
     }
   }
 
@@ -288,6 +325,17 @@ class ExcelHandler {
           throw new Error(`الصف ${index + 2}: بيانات ناقصة`);
         }
 
+        // Convert Arabic gender to English
+        let gender = null;
+        if (row['الجنس']) {
+          const genderValue = row['الجنس'].trim();
+          if (genderValue === 'ذكر' || genderValue === 'male') {
+            gender = 'male';
+          } else if (genderValue === 'أنثى' || genderValue === 'female') {
+            gender = 'female';
+          }
+        }
+
         return {
           employee_id: row['الرقم الوظيفي'],
           full_name: row['الاسم الكامل'],
@@ -295,7 +343,7 @@ class ExcelHandler {
           specialization: row['التخصص'],
           email: row['البريد الإلكتروني'] || null,
           phone: row['رقم الهاتف'] || null,
-          gender: row['الجنس'] || null
+          gender: gender
         };
       });
 

@@ -971,8 +971,10 @@ async function uploadStudentsFile() {
     toast.error('يرجى اختيار ملف Excel أولاً');
     return;
   }
-
+  
+  console.log('Uploading students file:', file.name);
   const result = await excelHandler.uploadStudents(file);
+  console.log('Upload result:', result);
   
   if (result && result.success) {
     // Show success message with details
@@ -986,6 +988,11 @@ async function uploadStudentsFile() {
     // Reset file input
     fileInput.value = '';
     document.getElementById('studentsFileName').textContent = '';
+    
+    // Refresh students list or go to students management page
+    setTimeout(() => {
+      showStudentsManagement();
+    }, 2000);
   }
 }
 
@@ -1011,6 +1018,11 @@ async function uploadTeachersFile() {
     
     fileInput.value = '';
     document.getElementById('teachersFileName').textContent = '';
+    
+    // Refresh teachers list or go to teachers management page
+    setTimeout(() => {
+      showTeachersManagementFull();
+    }, 2000);
   }
 }
 
