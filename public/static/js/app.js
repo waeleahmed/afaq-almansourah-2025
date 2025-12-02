@@ -571,73 +571,967 @@ function showSuccessMessage() {
 // ============================================
 // Admin Dashboard
 // ============================================
-function showAdminDashboard() {
-  const app = document.getElementById('app');
-  app.innerHTML = `
-    <div class="max-w-7xl mx-auto fade-in">
-      <!-- Header -->
-      <div class="glass-card p-6 mb-8">
-        <div class="flex justify-between items-center">
+async function showAdminDashboard() {
+  try {
+    const statsResponse = await axios.get('/api/admin/stats/overview');
+    const stats = statsResponse.data.stats || {};
+    
+    const app = document.getElementById('app');
+    app.innerHTML = `
+      <div class="max-w-7xl mx-auto fade-in">
+        <!-- Header -->
+        <div class="glass-card p-6 mb-8">
+          <div class="flex justify-between items-center">
+            <div>
+              <h1 class="text-3xl font-bold text-gray-800">لوحة الإدارة</h1>
+              <p class="text-gray-600 text-lg mt-1">
+                <i class="fas fa-user-shield ml-2"></i>
+                ${currentUser.full_name}
+              </p>
+            </div>
+            <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold">
+              <i class="fas fa-sign-out-alt ml-2"></i>
+              خروج
+            </button>
+          </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="glass-card p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-gray-600 text-lg mb-2">إجمالي الطلاب</p>
+                <p class="text-4xl font-bold text-blue-600">${stats.totalStudents || 0}</p>
+              </div>
+              <div class="icon-3d">
+                <i class="fas fa-users text-blue-600" style="font-size: 3rem;"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-gray-600 text-lg mb-2">إجمالي المعلمين</p>
+                <p class="text-4xl font-bold text-green-600">${stats.totalTeachers || 0}</p>
+              </div>
+              <div class="icon-3d">
+                <i class="fas fa-chalkboard-teacher text-green-600" style="font-size: 3rem;"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-gray-600 text-lg mb-2">إجمالي التقييمات</p>
+                <p class="text-4xl font-bold text-purple-600">${stats.totalEvaluations || 0}</p>
+              </div>
+              <div class="icon-3d">
+                <i class="fas fa-star text-purple-600" style="font-size: 3rem;"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-gray-600 text-lg mb-2">التقييمات المكتملة</p>
+                <p class="text-4xl font-bold text-orange-600">${stats.completedEvaluations || 0}</p>
+              </div>
+              <div class="icon-3d">
+                <i class="fas fa-check-circle text-orange-600" style="font-size: 3rem;"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Menu Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="showReportsPage()">
+            <div class="icon-3d inline-block mb-4">
+              <i class="fas fa-chart-bar text-blue-600" style="font-size: 3rem;"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800">التقارير والرسوم البيانية</h3>
+            <p class="text-gray-600 mt-2 text-sm">عرض التقارير التفصيلية</p>
+          </div>
+
+          <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="showCriteriaManagement()">
+            <div class="icon-3d inline-block mb-4">
+              <i class="fas fa-tasks text-green-600" style="font-size: 3rem;"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800">إدارة معايير التقييم</h3>
+            <p class="text-gray-600 mt-2 text-sm">إضافة وتعديل المعايير</p>
+          </div>
+
+          <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="showTeachersManagement()">
+            <div class="icon-3d inline-block mb-4">
+              <i class="fas fa-chalkboard-teacher text-purple-600" style="font-size: 3rem;"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800">إدارة المعلمين</h3>
+            <p class="text-gray-600 mt-2 text-sm">عرض وإدارة المعلمين</p>
+          </div>
+
+          <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="alert('قريباً')">
+            <div class="icon-3d inline-block mb-4">
+              <i class="fas fa-users text-orange-600" style="font-size: 3rem;"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800">إدارة الطلاب</h3>
+            <p class="text-gray-600 mt-2 text-sm">عرض وإدارة الطلاب</p>
+          </div>
+        </div>
+      </div>
+    `;
+  } catch (error) {
+    console.error('Error loading admin dashboard:', error);
+  }
+}
+
+// ============================================
+// Criteria Management
+// ============================================
+async function showCriteriaManagement() {
+  try {
+    const response = await axios.get('/api/admin/criteria/all');
+    const criteria = response.data.criteria || [];
+    
+    const app = document.getElementById('app');
+    app.innerHTML = `
+      <div class="max-w-6xl mx-auto fade-in">
+        <!-- Header -->
+        <div class="glass-card p-6 mb-8">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-3xl font-bold text-gray-800">إدارة معايير التقييم</h2>
+              <p class="text-gray-600 text-lg mt-1">إضافة وتعديل وحذف معايير التقييم</p>
+            </div>
+            <div class="flex gap-4">
+              <button onclick="showAddCriterionModal()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold">
+                <i class="fas fa-plus ml-2"></i>
+                إضافة معيار جديد
+              </button>
+              <button onclick="showAdminDashboard()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold">
+                <i class="fas fa-arrow-right ml-2"></i>
+                رجوع
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Criteria Table -->
+        <div class="glass-card p-8">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b-2 border-gray-300">
+                  <th class="text-right py-3 px-4 font-bold text-gray-700">#</th>
+                  <th class="text-right py-3 px-4 font-bold text-gray-700">عنوان المعيار</th>
+                  <th class="text-right py-3 px-4 font-bold text-gray-700">الوصف</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">الدرجة القصوى</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">الترتيب</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">الحالة</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${criteria.map((criterion, index) => `
+                  <tr class="border-b border-gray-200 hover:bg-gray-50">
+                    <td class="py-3 px-4">${index + 1}</td>
+                    <td class="py-3 px-4 font-semibold">${criterion.title}</td>
+                    <td class="py-3 px-4 text-gray-600 text-sm">${criterion.description || '-'}</td>
+                    <td class="py-3 px-4 text-center">
+                      <span class="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold">
+                        ${criterion.max_score}
+                      </span>
+                    </td>
+                    <td class="py-3 px-4 text-center">${criterion.display_order}</td>
+                    <td class="py-3 px-4 text-center">
+                      ${criterion.is_active ? 
+                        '<span class="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">نشط</span>' : 
+                        '<span class="inline-block bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold">معطل</span>'
+                      }
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                      <div class="flex justify-center gap-2">
+                        <button 
+                          onclick='editCriterion(${JSON.stringify(criterion)})' 
+                          class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                          title="تعديل"
+                        >
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button 
+                          onclick="editCriterionScore(${criterion.id}, ${criterion.max_score}, '${criterion.title}')" 
+                          class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm"
+                          title="تعديل الدرجة وإعادة الاحتساب"
+                        >
+                          <i class="fas fa-calculator"></i>
+                        </button>
+                        <button 
+                          onclick="toggleCriterion(${criterion.id}, ${criterion.is_active ? 0 : 1})" 
+                          class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm"
+                          title="${criterion.is_active ? 'تعطيل' : 'تفعيل'}"
+                        >
+                          <i class="fas fa-${criterion.is_active ? 'ban' : 'check'}"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Container -->
+      <div id="modalContainer"></div>
+    `;
+  } catch (error) {
+    console.error('Error loading criteria:', error);
+  }
+}
+
+// Add criterion modal
+function showAddCriterionModal() {
+  const modal = document.getElementById('modalContainer');
+  modal.innerHTML = `
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeModal(event)">
+      <div class="glass-card p-8 max-w-2xl w-full mx-4" onclick="event.stopPropagation()">
+        <h3 class="text-2xl font-bold text-gray-800 mb-6">إضافة معيار جديد</h3>
+        
+        <form id="addCriterionForm" class="space-y-4">
           <div>
-            <h1 class="text-3xl font-bold text-gray-800">لوحة الإدارة</h1>
-            <p class="text-gray-600 text-lg mt-1">
-              <i class="fas fa-user-shield ml-2"></i>
-              ${currentUser.full_name}
-            </p>
+            <label class="block text-gray-700 font-semibold mb-2">عنوان المعيار *</label>
+            <input 
+              type="text" 
+              id="criterionTitle" 
+              class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none"
+              required
+            >
           </div>
-          <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold">
-            <i class="fas fa-sign-out-alt ml-2"></i>
-            خروج
-          </button>
-        </div>
-      </div>
 
-      <!-- Dashboard Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="alert('قريباً')">
-          <div class="icon-3d inline-block mb-4">
-            <i class="fas fa-chart-bar text-blue-600" style="font-size: 3rem;"></i>
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">الوصف</label>
+            <textarea 
+              id="criterionDescription" 
+              rows="3"
+              class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none"
+            ></textarea>
           </div>
-          <h3 class="text-xl font-bold text-gray-800">التقارير</h3>
-        </div>
 
-        <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="alert('قريباً')">
-          <div class="icon-3d inline-block mb-4">
-            <i class="fas fa-users text-green-600" style="font-size: 3rem;"></i>
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">الدرجة القصوى *</label>
+            <input 
+              type="number" 
+              id="criterionMaxScore" 
+              value="10"
+              min="1"
+              max="100"
+              class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none"
+              required
+            >
           </div>
-          <h3 class="text-xl font-bold text-gray-800">إدارة الطلاب</h3>
-        </div>
 
-        <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="alert('قريباً')">
-          <div class="icon-3d inline-block mb-4">
-            <i class="fas fa-chalkboard-teacher text-purple-600" style="font-size: 3rem;"></i>
+          <div class="flex gap-4 mt-6">
+            <button 
+              type="submit" 
+              class="flex-1 btn-primary text-white py-3 rounded-lg font-bold"
+            >
+              <i class="fas fa-plus ml-2"></i>
+              إضافة المعيار
+            </button>
+            <button 
+              type="button" 
+              onclick="closeModal()"
+              class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-bold"
+            >
+              إلغاء
+            </button>
           </div>
-          <h3 class="text-xl font-bold text-gray-800">إدارة المعلمين</h3>
-        </div>
-
-        <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="alert('قريباً')">
-          <div class="icon-3d inline-block mb-4">
-            <i class="fas fa-cog text-orange-600" style="font-size: 3rem;"></i>
-          </div>
-          <h3 class="text-xl font-bold text-gray-800">الإعدادات</h3>
-        </div>
-      </div>
-
-      <div class="glass-card p-8">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">قريباً...</h2>
-        <p class="text-gray-600 text-lg">
-          سيتم إضافة المزيد من الميزات قريباً مثل:
-        </p>
-        <ul class="list-disc mr-8 mt-4 text-gray-700 space-y-2">
-          <li>رفع ملفات Excel للطلاب والمعلمين</li>
-          <li>إدارة الأسئلة وتعديل الدرجات</li>
-          <li>التقارير التفصيلية والرسوم البيانية</li>
-          <li>تصدير التقارير بصيغة PDF</li>
-          <li>المقارنات بين المعلمين والفصول</li>
-        </ul>
+        </form>
       </div>
     </div>
   `;
+
+  document.getElementById('addCriterionForm').addEventListener('submit', handleAddCriterion);
+}
+
+// Handle add criterion
+async function handleAddCriterion(e) {
+  e.preventDefault();
+  
+  const title = document.getElementById('criterionTitle').value;
+  const description = document.getElementById('criterionDescription').value;
+  const max_score = parseInt(document.getElementById('criterionMaxScore').value);
+  
+  try {
+    const response = await axios.post('/api/admin/criteria/add', {
+      title,
+      description,
+      max_score
+    });
+    
+    if (response.data.success) {
+      alert('تم إضافة المعيار بنجاح!');
+      showCriteriaManagement();
+    } else {
+      alert(response.data.message);
+    }
+  } catch (error) {
+    alert('حدث خطأ في إضافة المعيار');
+  }
+}
+
+// Edit criterion
+function editCriterion(criterion) {
+  const modal = document.getElementById('modalContainer');
+  modal.innerHTML = `
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeModal(event)">
+      <div class="glass-card p-8 max-w-2xl w-full mx-4" onclick="event.stopPropagation()">
+        <h3 class="text-2xl font-bold text-gray-800 mb-6">تعديل المعيار</h3>
+        
+        <form id="editCriterionForm" class="space-y-4">
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">عنوان المعيار *</label>
+            <input 
+              type="text" 
+              id="editCriterionTitle" 
+              value="${criterion.title}"
+              class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none"
+              required
+            >
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">الوصف</label>
+            <textarea 
+              id="editCriterionDescription" 
+              rows="3"
+              class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none"
+            >${criterion.description || ''}</textarea>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">الدرجة القصوى *</label>
+            <input 
+              type="number" 
+              id="editCriterionMaxScore" 
+              value="${criterion.max_score}"
+              min="1"
+              max="100"
+              class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none"
+              required
+            >
+            <p class="text-sm text-gray-600 mt-1">⚠️ لإعادة احتساب التقييمات، استخدم زر "تعديل الدرجة" من الجدول</p>
+          </div>
+
+          <div>
+            <label class="flex items-center">
+              <input 
+                type="checkbox" 
+                id="editCriterionActive" 
+                ${criterion.is_active ? 'checked' : ''}
+                class="ml-2 w-5 h-5"
+              >
+              <span class="text-gray-700 font-semibold">معيار نشط</span>
+            </label>
+          </div>
+
+          <div class="flex gap-4 mt-6">
+            <button 
+              type="submit" 
+              class="flex-1 btn-primary text-white py-3 rounded-lg font-bold"
+            >
+              <i class="fas fa-save ml-2"></i>
+              حفظ التعديلات
+            </button>
+            <button 
+              type="button" 
+              onclick="closeModal()"
+              class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-bold"
+            >
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('editCriterionForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const title = document.getElementById('editCriterionTitle').value;
+    const description = document.getElementById('editCriterionDescription').value;
+    const max_score = parseInt(document.getElementById('editCriterionMaxScore').value);
+    const is_active = document.getElementById('editCriterionActive').checked;
+    
+    try {
+      const response = await axios.put(`/api/admin/criteria/${criterion.id}`, {
+        title,
+        description,
+        max_score,
+        is_active
+      });
+      
+      if (response.data.success) {
+        alert('تم تحديث المعيار بنجاح!');
+        showCriteriaManagement();
+      } else {
+        alert(response.data.message);
+      }
+    } catch (error) {
+      alert('حدث خطأ في تحديث المعيار');
+    }
+  });
+}
+
+// Edit criterion score and recalculate
+function editCriterionScore(id, currentScore, title) {
+  const modal = document.getElementById('modalContainer');
+  modal.innerHTML = `
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeModal(event)">
+      <div class="glass-card p-8 max-w-2xl w-full mx-4" onclick="event.stopPropagation()">
+        <h3 class="text-2xl font-bold text-gray-800 mb-6">تعديل الدرجة وإعادة الاحتساب</h3>
+        
+        <div class="bg-yellow-50 border-r-4 border-yellow-500 p-4 mb-6">
+          <p class="text-yellow-800 font-semibold">⚠️ تنبيه مهم</p>
+          <p class="text-yellow-700 mt-2">سيتم إعادة احتساب جميع التقييمات السابقة لهذا المعيار بناءً على النسبة الجديدة.</p>
+        </div>
+
+        <div class="mb-6">
+          <p class="text-gray-700 mb-2"><strong>المعيار:</strong> ${title}</p>
+          <p class="text-gray-700"><strong>الدرجة الحالية:</strong> ${currentScore}</p>
+        </div>
+        
+        <form id="editScoreForm" class="space-y-4">
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">الدرجة القصوى الجديدة *</label>
+            <input 
+              type="number" 
+              id="newMaxScore" 
+              value="${currentScore}"
+              min="1"
+              max="100"
+              class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none text-2xl font-bold text-center"
+              required
+            >
+            <p class="text-sm text-gray-600 mt-2 text-center">
+              النسبة: <span id="ratio">1.00</span>x
+            </p>
+          </div>
+
+          <div class="flex gap-4 mt-6">
+            <button 
+              type="submit" 
+              class="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-bold"
+            >
+              <i class="fas fa-calculator ml-2"></i>
+              تحديث وإعادة الاحتساب
+            </button>
+            <button 
+              type="button" 
+              onclick="closeModal()"
+              class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-bold"
+            >
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  const newMaxScoreInput = document.getElementById('newMaxScore');
+  const ratioSpan = document.getElementById('ratio');
+  
+  newMaxScoreInput.addEventListener('input', () => {
+    const newScore = parseFloat(newMaxScoreInput.value) || currentScore;
+    const ratio = (newScore / currentScore).toFixed(2);
+    ratioSpan.textContent = ratio;
+  });
+
+  document.getElementById('editScoreForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const newScore = parseInt(document.getElementById('newMaxScore').value);
+    
+    if (!confirm(`هل أنت متأكد من تغيير الدرجة من ${currentScore} إلى ${newScore}؟\nسيتم إعادة احتساب جميع التقييمات السابقة.`)) {
+      return;
+    }
+    
+    try {
+      const response = await axios.put(`/api/admin/criteria/${id}/score`, {
+        max_score: newScore
+      });
+      
+      if (response.data.success) {
+        alert('تم تحديث الدرجة وإعادة احتساب جميع التقييمات بنجاح!');
+        showCriteriaManagement();
+      } else {
+        alert(response.data.message);
+      }
+    } catch (error) {
+      alert('حدث خطأ في تحديث الدرجة');
+    }
+  });
+}
+
+// Toggle criterion active status
+async function toggleCriterion(id, newStatus) {
+  try {
+    // Get current criterion data
+    const response = await axios.get('/api/admin/criteria/all');
+    const criterion = response.data.criteria.find(c => c.id === id);
+    
+    if (!criterion) return;
+    
+    await axios.put(`/api/admin/criteria/${id}`, {
+      title: criterion.title,
+      description: criterion.description,
+      max_score: criterion.max_score,
+      is_active: newStatus
+    });
+    
+    alert(newStatus ? 'تم تفعيل المعيار بنجاح!' : 'تم تعطيل المعيار بنجاح!');
+    showCriteriaManagement();
+  } catch (error) {
+    alert('حدث خطأ في تحديث حالة المعيار');
+  }
+}
+
+// Close modal
+function closeModal(event) {
+  if (!event || event.target === event.currentTarget) {
+    document.getElementById('modalContainer').innerHTML = '';
+  }
+}
+
+// ============================================
+// Teachers Management
+// ============================================
+async function showTeachersManagement() {
+  try {
+    const response = await axios.get('/api/admin/teachers/stats');
+    const teachers = response.data.teachers || [];
+    
+    const app = document.getElementById('app');
+    app.innerHTML = `
+      <div class="max-w-7xl mx-auto fade-in">
+        <!-- Header -->
+        <div class="glass-card p-6 mb-8">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-3xl font-bold text-gray-800">إدارة المعلمين</h2>
+              <p class="text-gray-600 text-lg mt-1">عرض إحصائيات وتقارير المعلمين</p>
+            </div>
+            <button onclick="showAdminDashboard()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold">
+              <i class="fas fa-arrow-right ml-2"></i>
+              رجوع
+            </button>
+          </div>
+        </div>
+
+        <!-- Teachers Table -->
+        <div class="glass-card p-8">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b-2 border-gray-300">
+                  <th class="text-right py-3 px-4 font-bold text-gray-700">اسم المعلم</th>
+                  <th class="text-right py-3 px-4 font-bold text-gray-700">المادة</th>
+                  <th class="text-right py-3 px-4 font-bold text-gray-700">التخصص</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">عدد التقييمات</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">المتوسط</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${teachers.map(teacher => {
+                  const avgScore = teacher.avg_score ? parseFloat(teacher.avg_score).toFixed(2) : '-';
+                  const percentage = teacher.avg_score ? ((teacher.avg_score / 10) * 100).toFixed(0) : 0;
+                  
+                  return `
+                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                      <td class="py-3 px-4 font-semibold">${teacher.full_name}</td>
+                      <td class="py-3 px-4">${teacher.subject}</td>
+                      <td class="py-3 px-4 text-gray-600">${teacher.specialization || '-'}</td>
+                      <td class="py-3 px-4 text-center">
+                        <span class="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold">
+                          ${teacher.total_evaluations || 0}
+                        </span>
+                      </td>
+                      <td class="py-3 px-4 text-center">
+                        ${teacher.avg_score ? `
+                          <div class="flex items-center justify-center gap-2">
+                            <span class="font-bold text-lg">${avgScore}/10</span>
+                            <span class="text-sm text-gray-600">(${percentage}%)</span>
+                          </div>
+                          <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                            <div class="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full" style="width: ${percentage}%"></div>
+                          </div>
+                        ` : '<span class="text-gray-400">لا توجد تقييمات</span>'}
+                      </td>
+                      <td class="py-3 px-4 text-center">
+                        <button 
+                          onclick="showTeacherReport(${teacher.id})" 
+                          class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded font-semibold"
+                        >
+                          <i class="fas fa-chart-line ml-2"></i>
+                          التقرير التفصيلي
+                        </button>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+  } catch (error) {
+    console.error('Error loading teachers:', error);
+  }
+}
+
+// ============================================
+// Reports and Charts
+// ============================================
+async function showReportsPage() {
+  try {
+    const [subjectStats, classStats, teachersStats] = await Promise.all([
+      axios.get('/api/admin/stats/by-subject'),
+      axios.get('/api/admin/stats/by-class'),
+      axios.get('/api/admin/teachers/stats')
+    ]);
+    
+    const app = document.getElementById('app');
+    app.innerHTML = `
+      <div class="max-w-7xl mx-auto fade-in">
+        <!-- Header -->
+        <div class="glass-card p-6 mb-8">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-3xl font-bold text-gray-800">التقارير والرسوم البيانية</h2>
+              <p class="text-gray-600 text-lg mt-1">عرض الإحصائيات والمقارنات</p>
+            </div>
+            <button onclick="showAdminDashboard()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold">
+              <i class="fas fa-arrow-right ml-2"></i>
+              رجوع
+            </button>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <!-- By Subject Chart -->
+          <div class="glass-card p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">
+              <i class="fas fa-book ml-2 text-blue-600"></i>
+              المقارنة حسب المادة
+            </h3>
+            <canvas id="subjectChart"></canvas>
+          </div>
+
+          <!-- By Class Chart -->
+          <div class="glass-card p-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">
+              <i class="fas fa-school ml-2 text-green-600"></i>
+              المقارنة حسب الفصل
+            </h3>
+            <canvas id="classChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Top Teachers -->
+        <div class="glass-card p-6">
+          <h3 class="text-xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-trophy ml-2 text-yellow-500"></i>
+            أفضل المعلمين تقييماً
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            ${teachersStats.data.teachers
+              .filter(t => t.avg_score)
+              .sort((a, b) => b.avg_score - a.avg_score)
+              .slice(0, 3)
+              .map((teacher, index) => {
+                const medals = ['🥇', '🥈', '🥉'];
+                const colors = ['yellow', 'gray', 'orange'];
+                return `
+                  <div class="glass-card p-6 text-center hover:shadow-2xl transition-all">
+                    <div class="text-6xl mb-4">${medals[index]}</div>
+                    <h4 class="text-lg font-bold text-gray-800 mb-2">${teacher.full_name}</h4>
+                    <p class="text-gray-600 mb-3">${teacher.subject}</p>
+                    <div class="text-3xl font-bold text-${colors[index]}-600 mb-2">
+                      ${parseFloat(teacher.avg_score).toFixed(2)}/10
+                    </div>
+                    <p class="text-sm text-gray-600">${teacher.total_evaluations} تقييم</p>
+                  </div>
+                `;
+              }).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Draw Subject Chart
+    const subjectData = subjectStats.data.stats;
+    new Chart(document.getElementById('subjectChart'), {
+      type: 'bar',
+      data: {
+        labels: subjectData.map(s => s.subject),
+        datasets: [{
+          label: 'متوسط التقييم',
+          data: subjectData.map(s => parseFloat(s.avg_score || 0).toFixed(2)),
+          backgroundColor: 'rgba(102, 126, 234, 0.8)',
+          borderColor: 'rgba(102, 126, 234, 1)',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 10,
+            ticks: {
+              font: { family: 'Tajawal' }
+            }
+          },
+          x: {
+            ticks: {
+              font: { family: 'Tajawal' }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: {
+              font: { family: 'Tajawal', size: 14 }
+            }
+          }
+        }
+      }
+    });
+
+    // Draw Class Chart
+    const classData = classStats.data.stats;
+    new Chart(document.getElementById('classChart'), {
+      type: 'bar',
+      data: {
+        labels: classData.map(c => `${c.grade_level} - ${c.class_name}`),
+        datasets: [{
+          label: 'متوسط التقييم',
+          data: classData.map(c => parseFloat(c.avg_score || 0).toFixed(2)),
+          backgroundColor: 'rgba(34, 197, 94, 0.8)',
+          borderColor: 'rgba(34, 197, 94, 1)',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 10,
+            ticks: {
+              font: { family: 'Tajawal' }
+            }
+          },
+          x: {
+            ticks: {
+              font: { family: 'Tajawal' }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: {
+              font: { family: 'Tajawal', size: 14 }
+            }
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error loading reports:', error);
+  }
+}
+
+// Show teacher detailed report
+async function showTeacherReport(teacherId) {
+  try {
+    const response = await axios.get(`/api/admin/teacher-report/${teacherId}`);
+    const { teacher, criteriaStats, classStats } = response.data;
+    
+    const app = document.getElementById('app');
+    app.innerHTML = `
+      <div class="max-w-6xl mx-auto fade-in">
+        <!-- Header -->
+        <div class="glass-card p-6 mb-8">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-3xl font-bold text-gray-800">${teacher.full_name}</h2>
+              <p class="text-gray-600 text-lg mt-1">
+                <i class="fas fa-book ml-2"></i>
+                ${teacher.subject} - ${teacher.specialization || 'غير محدد'}
+              </p>
+            </div>
+            <button onclick="showTeachersManagement()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold">
+              <i class="fas fa-arrow-right ml-2"></i>
+              رجوع
+            </button>
+          </div>
+        </div>
+
+        <!-- Criteria Performance Chart -->
+        <div class="glass-card p-6 mb-8">
+          <h3 class="text-xl font-bold text-gray-800 mb-4">
+            <i class="fas fa-star ml-2 text-purple-600"></i>
+            الأداء حسب المعايير
+          </h3>
+          <canvas id="criteriaChart"></canvas>
+        </div>
+
+        <!-- Class Performance -->
+        <div class="glass-card p-6 mb-8">
+          <h3 class="text-xl font-bold text-gray-800 mb-4">
+            <i class="fas fa-school ml-2 text-green-600"></i>
+            الأداء حسب الفصول
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            ${classStats.map(cls => {
+              const percentage = ((cls.avg_score / 10) * 100).toFixed(0);
+              return `
+                <div class="glass-card p-6 text-center">
+                  <h4 class="text-lg font-bold text-gray-800 mb-3">${cls.class_name}</h4>
+                  <div class="text-4xl font-bold text-purple-600 mb-2">
+                    ${parseFloat(cls.avg_score).toFixed(2)}/10
+                  </div>
+                  <p class="text-gray-600 mb-3">${cls.student_count} طالب</p>
+                  <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div class="bg-gradient-to-r from-purple-500 to-blue-500 h-3 rounded-full" style="width: ${percentage}%"></div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Detailed Criteria Table -->
+        <div class="glass-card p-6">
+          <h3 class="text-xl font-bold text-gray-800 mb-4">
+            <i class="fas fa-list ml-2 text-blue-600"></i>
+            التفاصيل الكاملة للمعايير
+          </h3>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b-2 border-gray-300">
+                  <th class="text-right py-3 px-4 font-bold text-gray-700">المعيار</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">عدد التقييمات</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">المتوسط</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">النسبة المئوية</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">التقييم</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${criteriaStats.map(stat => {
+                  const percentage = ((stat.avg_score / stat.max_score) * 100).toFixed(0);
+                  let ratingClass = 'bg-red-100 text-red-800';
+                  let ratingText = 'ضعيف';
+                  
+                  if (percentage >= 90) {
+                    ratingClass = 'bg-green-100 text-green-800';
+                    ratingText = 'ممتاز';
+                  } else if (percentage >= 80) {
+                    ratingClass = 'bg-blue-100 text-blue-800';
+                    ratingText = 'جيد جداً';
+                  } else if (percentage >= 70) {
+                    ratingClass = 'bg-yellow-100 text-yellow-800';
+                    ratingText = 'جيد';
+                  } else if (percentage >= 60) {
+                    ratingClass = 'bg-orange-100 text-orange-800';
+                    ratingText = 'مقبول';
+                  }
+                  
+                  return `
+                    <tr class="border-b border-gray-200">
+                      <td class="py-3 px-4 font-semibold">${stat.criteria_title}</td>
+                      <td class="py-3 px-4 text-center">${stat.evaluation_count}</td>
+                      <td class="py-3 px-4 text-center font-bold">${parseFloat(stat.avg_score).toFixed(2)}/${stat.max_score}</td>
+                      <td class="py-3 px-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                          <span class="font-bold">${percentage}%</span>
+                          <div class="w-24 bg-gray-200 rounded-full h-2">
+                            <div class="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full" style="width: ${percentage}%"></div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="py-3 px-4 text-center">
+                        <span class="inline-block ${ratingClass} px-3 py-1 rounded-full font-semibold">
+                          ${ratingText}
+                        </span>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Draw Criteria Chart
+    new Chart(document.getElementById('criteriaChart'), {
+      type: 'radar',
+      data: {
+        labels: criteriaStats.map(s => s.criteria_title),
+        datasets: [{
+          label: 'التقييم',
+          data: criteriaStats.map(s => parseFloat(s.avg_score)),
+          backgroundColor: 'rgba(102, 126, 234, 0.2)',
+          borderColor: 'rgba(102, 126, 234, 1)',
+          borderWidth: 2,
+          pointBackgroundColor: 'rgba(102, 126, 234, 1)',
+          pointBorderColor: '#fff',
+          pointHoverBackgroundColor: '#fff',
+          pointHoverBorderColor: 'rgba(102, 126, 234, 1)'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          r: {
+            beginAtZero: true,
+            max: 10,
+            ticks: {
+              font: { family: 'Tajawal' }
+            },
+            pointLabels: {
+              font: { family: 'Tajawal', size: 12 }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: {
+              font: { family: 'Tajawal', size: 14 }
+            }
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error loading teacher report:', error);
+  }
 }
 
 // Logout

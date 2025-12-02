@@ -424,6 +424,282 @@ app.post('/api/evaluation/submit', async (c) => {
 })
 
 // ============================================
+// API Routes - Admin - Criteria Management
+// ============================================
+
+// Get all criteria (including inactive)
+app.get('/api/admin/criteria/all', async (c) => {
+  try {
+    const db = c.env.DB
+    const criteria = await db
+      .prepare('SELECT * FROM evaluation_criteria ORDER BY display_order')
+      .all()
+    
+    return c.json({ success: true, criteria: criteria.results })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في جلب المعايير' }, 500)
+  }
+})
+
+// Add new criterion
+app.post('/api/admin/criteria/add', async (c) => {
+  try {
+    const { title, description, max_score } = await c.req.json()
+    const db = c.env.DB
+    
+    // Get max display order
+    const maxOrder = await db
+      .prepare('SELECT MAX(display_order) as max_order FROM evaluation_criteria')
+      .first()
+    
+    const newOrder = (maxOrder?.max_order || 0) + 1
+    
+    const result = await db
+      .prepare(`
+        INSERT INTO evaluation_criteria (title, description, max_score, display_order)
+        VALUES (?, ?, ?, ?)
+      `)
+      .bind(title, description || null, max_score, newOrder)
+      .run()
+    
+    return c.json({ 
+      success: true, 
+      message: 'تم إضافة المعيار بنجاح',
+      criteriaId: result.meta.last_row_id 
+    })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في إضافة المعيار' }, 500)
+  }
+})
+
+// Update criterion
+app.put('/api/admin/criteria/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const { title, description, max_score, is_active } = await c.req.json()
+    const db = c.env.DB
+    
+    await db
+      .prepare(`
+        UPDATE evaluation_criteria 
+        SET title = ?, description = ?, max_score = ?, is_active = ?, updated_at = datetime('now')
+        WHERE id = ?
+      `)
+      .bind(title, description || null, max_score, is_active ? 1 : 0, id)
+      .run()
+    
+    return c.json({ success: true, message: 'تم تحديث المعيار بنجاح' })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في تحديث المعيار' }, 500)
+  }
+})
+
+// Update criterion max score and recalculate
+app.put('/api/admin/criteria/:id/score', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const { max_score } = await c.req.json()
+    const db = c.env.DB
+    
+    // Get old max score
+    const criterion = await db
+      .prepare('SELECT max_score FROM evaluation_criteria WHERE id = ?')
+      .bind(id)
+      .first()
+    
+    if (!criterion) {
+      return c.json({ success: false, message: 'المعيار غير موجود' }, 404)
+    }
+    
+    const oldMaxScore = criterion.max_score as number
+    const ratio = max_score / oldMaxScore
+    
+    // Update criterion
+    await db
+      .prepare('UPDATE evaluation_criteria SET max_score = ?, updated_at = datetime("now") WHERE id = ?')
+      .bind(max_score, id)
+      .run()
+    
+    // Recalculate all evaluations for this criterion
+    await db
+      .prepare(`
+        UPDATE evaluations 
+        SET score = CAST(ROUND(score * ?) AS INTEGER)
+        WHERE criteria_id = ?
+      `)
+      .bind(ratio, id)
+      .run()
+    
+    return c.json({ 
+      success: true, 
+      message: 'تم تحديث الدرجة وإعادة احتساب جميع التقييمات بنجاح',
+      ratio 
+    })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في تحديث الدرجة' }, 500)
+  }
+})
+
+// Delete criterion
+app.delete('/api/admin/criteria/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const db = c.env.DB
+    
+    // Check if there are evaluations using this criterion
+    const evaluations = await db
+      .prepare('SELECT COUNT(*) as count FROM evaluations WHERE criteria_id = ?')
+      .bind(id)
+      .first()
+    
+    if (evaluations && evaluations.count > 0) {
+      return c.json({ 
+        success: false, 
+        message: 'لا يمكن حذف هذا المعيار لأن هناك تقييمات مرتبطة به. يمكنك تعطيله بدلاً من ذلك.' 
+      }, 400)
+    }
+    
+    await db
+      .prepare('DELETE FROM evaluation_criteria WHERE id = ?')
+      .bind(id)
+      .run()
+    
+    return c.json({ success: true, message: 'تم حذف المعيار بنجاح' })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في حذف المعيار' }, 500)
+  }
+})
+
+// Reorder criteria
+app.put('/api/admin/criteria/reorder', async (c) => {
+  try {
+    const { criteria } = await c.req.json() // Array of {id, display_order}
+    const db = c.env.DB
+    
+    const updates = criteria.map((item: any) => 
+      db.prepare('UPDATE evaluation_criteria SET display_order = ? WHERE id = ?')
+        .bind(item.display_order, item.id)
+    )
+    
+    await db.batch(updates)
+    
+    return c.json({ success: true, message: 'تم تحديث ترتيب المعايير بنجاح' })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في تحديث الترتيب' }, 500)
+  }
+})
+
+// ============================================
+// API Routes - Admin - Statistics
+// ============================================
+
+// Get overall statistics
+app.get('/api/admin/stats/overview', async (c) => {
+  try {
+    const db = c.env.DB
+    
+    // Get counts
+    const students = await db.prepare('SELECT COUNT(*) as count FROM users WHERE user_type = "student"').first()
+    const teachers = await db.prepare('SELECT COUNT(*) as count FROM teachers').first()
+    const evaluations = await db.prepare('SELECT COUNT(*) as count FROM evaluations').first()
+    const completedEvals = await db.prepare('SELECT COUNT(*) as count FROM evaluation_status WHERE is_completed = 1').first()
+    
+    return c.json({
+      success: true,
+      stats: {
+        totalStudents: students?.count || 0,
+        totalTeachers: teachers?.count || 0,
+        totalEvaluations: evaluations?.count || 0,
+        completedEvaluations: completedEvals?.count || 0
+      }
+    })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في جلب الإحصائيات' }, 500)
+  }
+})
+
+// Get all teachers with their evaluation stats
+app.get('/api/admin/teachers/stats', async (c) => {
+  try {
+    const db = c.env.DB
+    
+    const teachers = await db
+      .prepare(`
+        SELECT 
+          t.id,
+          t.full_name,
+          t.subject,
+          t.specialization,
+          COUNT(DISTINCT e.student_id) as total_evaluations,
+          AVG(e.score) as avg_score,
+          MIN(e.score) as min_score,
+          MAX(e.score) as max_score
+        FROM teachers t
+        LEFT JOIN evaluations e ON t.id = e.teacher_id AND e.academic_year = '2025'
+        GROUP BY t.id, t.full_name, t.subject, t.specialization
+        ORDER BY t.full_name
+      `)
+      .all()
+    
+    return c.json({ success: true, teachers: teachers.results })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في جلب إحصائيات المعلمين' }, 500)
+  }
+})
+
+// Get subject comparison
+app.get('/api/admin/stats/by-subject', async (c) => {
+  try {
+    const db = c.env.DB
+    
+    const stats = await db
+      .prepare(`
+        SELECT 
+          t.subject,
+          COUNT(DISTINCT t.id) as teacher_count,
+          COUNT(DISTINCT e.student_id) as total_evaluations,
+          AVG(e.score) as avg_score
+        FROM teachers t
+        LEFT JOIN evaluations e ON t.id = e.teacher_id AND e.academic_year = '2025'
+        GROUP BY t.subject
+        ORDER BY avg_score DESC
+      `)
+      .all()
+    
+    return c.json({ success: true, stats: stats.results })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في جلب إحصائيات المواد' }, 500)
+  }
+})
+
+// Get class comparison
+app.get('/api/admin/stats/by-class', async (c) => {
+  try {
+    const db = c.env.DB
+    
+    const stats = await db
+      .prepare(`
+        SELECT 
+          e.grade_level,
+          e.class_name,
+          COUNT(DISTINCT e.student_id) as student_count,
+          COUNT(DISTINCT e.teacher_id) as teacher_count,
+          COUNT(*) as total_evaluations,
+          AVG(e.score) as avg_score
+        FROM evaluations e
+        WHERE e.academic_year = '2025'
+        GROUP BY e.grade_level, e.class_name
+        ORDER BY e.grade_level, e.class_name
+      `)
+      .all()
+    
+    return c.json({ success: true, stats: stats.results })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في جلب إحصائيات الفصول' }, 500)
+  }
+})
+
+// ============================================
 // API Routes - Admin Reports
 // ============================================
 
