@@ -2135,6 +2135,13 @@ async function showStudentsManagement() {
                     <td class="py-3 px-4 text-center">
                       <div class="flex justify-center gap-2">
                         <button 
+                          onclick='showStudentEvaluationsModal(${student.id}, "${student.full_name}")' 
+                          class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
+                          title="عرض التقييمات"
+                        >
+                          <i class="fas fa-file-alt"></i>
+                        </button>
+                        <button 
                           onclick='editStudent(${JSON.stringify(student)})' 
                           class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
                           title="تعديل"
@@ -2802,6 +2809,89 @@ async function removeTeacherClass(teacherId, classId, teacherName) {
     }
   } catch (error) {
     alert('حدث خطأ في إلغاء التعيين');
+  }
+}
+
+// ============================================
+// Student Evaluations Modal
+// ============================================
+async function showStudentEvaluationsModal(studentId, studentName) {
+  try {
+    // Get all teachers who were evaluated by this student
+    const response = await axios.get(`/api/admin/students/${studentId}/evaluations`);
+    
+    if (!response.data.success) {
+      toast.error('فشل في جلب تقييمات الطالب');
+      return;
+    }
+    
+    const evaluations = response.data.evaluations || [];
+    
+    // Create modal HTML
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 fade-in';
+    modal.innerHTML = `
+      <div class="bg-white rounded-lg p-8 max-w-3xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-file-alt text-blue-600 ml-2"></i>
+            تقييمات الطالب: ${studentName}
+          </h3>
+          <button 
+            onclick="this.closest('.fixed').remove()" 
+            class="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        ${evaluations.length > 0 ? `
+          <div class="space-y-4">
+            ${evaluations.map(eval => `
+              <div class="glass-card p-4 flex justify-between items-center">
+                <div class="flex-1">
+                  <h4 class="font-bold text-lg text-gray-800">${eval.teacher_name}</h4>
+                  <p class="text-gray-600">المادة: ${eval.subject}</p>
+                  <p class="text-sm text-gray-500 mt-1">
+                    <i class="fas fa-star text-yellow-500 ml-1"></i>
+                    عدد التقييمات: ${eval.evaluation_count}
+                  </p>
+                </div>
+                <div class="flex gap-2">
+                  <button 
+                    onclick="pdfExporter.exportStudentEvaluation(${studentId}, ${eval.teacher_id})" 
+                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold"
+                  >
+                    <i class="fas fa-download ml-2"></i>
+                    تصدير PDF
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : `
+          <div class="text-center py-8">
+            <i class="fas fa-exclamation-circle text-gray-400 text-5xl mb-4"></i>
+            <p class="text-gray-600 text-lg">لا توجد تقييمات لهذا الطالب حتى الآن</p>
+          </div>
+        `}
+        
+        <div class="mt-6 text-center">
+          <button 
+            onclick="this.closest('.fixed').remove()" 
+            class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold"
+          >
+            <i class="fas fa-times ml-2"></i>
+            إغلاق
+          </button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+  } catch (error) {
+    console.error('Error showing student evaluations:', error);
+    toast.error('حدث خطأ في عرض تقييمات الطالب');
   }
 }
 

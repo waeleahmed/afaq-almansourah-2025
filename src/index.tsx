@@ -456,8 +456,7 @@ app.get('/api/evaluation/student-report/:studentId/:teacherId', async (c) => {
         SELECT 
           e.score,
           ec.title as criteria_title,
-          ec.max_score,
-          e.created_at
+          ec.max_score
         FROM evaluations e
         JOIN evaluation_criteria ec ON e.criteria_id = ec.id
         WHERE e.student_id = ? AND e.teacher_id = ? AND e.academic_year = '2025'
@@ -799,6 +798,40 @@ app.get('/api/admin/students/:id', async (c) => {
     return c.json({ success: true, student })
   } catch (error) {
     return c.json({ success: false, message: 'حدث خطأ في جلب بيانات الطالب' }, 500)
+  }
+})
+
+// Get student evaluations (teachers evaluated by this student)
+app.get('/api/admin/students/:id/evaluations', async (c) => {
+  try {
+    const studentId = c.req.param('id')
+    const db = c.env.DB
+    
+    const evaluations = await db
+      .prepare(`
+        SELECT 
+          t.id as teacher_id,
+          t.full_name as teacher_name,
+          t.subject,
+          COUNT(DISTINCT e.id) as evaluation_count,
+          AVG(e.score / ec.max_score * 10) as average_score
+        FROM evaluations e
+        JOIN teachers t ON e.teacher_id = t.id
+        JOIN evaluation_criteria ec ON e.criteria_id = ec.id
+        WHERE e.student_id = ? AND e.academic_year = '2025'
+        GROUP BY t.id, t.full_name, t.subject
+        ORDER BY t.full_name
+      `)
+      .bind(studentId)
+      .all()
+    
+    return c.json({ 
+      success: true, 
+      evaluations: evaluations.results 
+    })
+  } catch (error) {
+    console.error('Error getting student evaluations:', error)
+    return c.json({ success: false, message: 'حدث خطأ في جلب التقييمات' }, 500)
   }
 })
 
