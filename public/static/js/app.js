@@ -2699,13 +2699,34 @@ async function deleteTeacher(id, name) {
   try {
     const response = await axios.delete(`/api/admin/teachers/${id}`);
     if (response.data.success) {
-      alert('تم حذف المعلم بنجاح!');
+      toast.success('تم حذف المعلم بنجاح!');
       showTeachersManagementFull();
     } else {
-      alert(response.data.message);
+      // Check if teacher has evaluations
+      if (response.data.hasEvaluations) {
+        const forceDelete = confirm(
+          `⚠️ تحذير: المعلم "${name}" لديه ${response.data.evaluationCount} تقييم!\n\n` +
+          `هل تريد حذف المعلم مع جميع تقييماته؟\n` +
+          `هذا الإجراء لا يمكن التراجع عنه!`
+        );
+        
+        if (forceDelete) {
+          // Force delete with evaluations
+          const forceResponse = await axios.delete(`/api/admin/teachers/${id}?force=true`);
+          if (forceResponse.data.success) {
+            toast.success(`تم حذف المعلم و${response.data.evaluationCount} تقييم بنجاح`);
+            showTeachersManagementFull();
+          } else {
+            toast.error(forceResponse.data.message || 'حدث خطأ في الحذف');
+          }
+        }
+      } else {
+        toast.error(response.data.message || 'حدث خطأ في الحذف');
+      }
     }
   } catch (error) {
-    alert(error.response?.data?.message || 'حدث خطأ في حذف المعلم');
+    console.error('Error deleting teacher:', error);
+    toast.error(error.response?.data?.message || 'حدث خطأ في حذف المعلم');
   }
 }
 

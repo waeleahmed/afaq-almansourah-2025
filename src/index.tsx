@@ -1134,6 +1134,7 @@ app.put('/api/admin/teachers/:id', async (c) => {
 app.delete('/api/admin/teachers/:id', async (c) => {
   try {
     const id = c.req.param('id')
+    const forceDelete = c.req.query('force') === 'true' // Add force parameter
     const db = c.env.DB
     
     // Check if teacher has evaluations
@@ -1143,10 +1144,25 @@ app.delete('/api/admin/teachers/:id', async (c) => {
       .first()
     
     if (evaluations && evaluations.count > 0) {
-      return c.json({ 
-        success: false, 
-        message: 'لا يمكن حذف المعلم لوجود تقييمات مرتبطة به' 
-      }, 400)
+      if (!forceDelete) {
+        return c.json({ 
+          success: false, 
+          message: 'لا يمكن حذف المعلم لوجود تقييمات مرتبطة به',
+          hasEvaluations: true,
+          evaluationCount: evaluations.count
+        }, 400)
+      }
+      
+      // Force delete: Delete evaluations first
+      await db
+        .prepare('DELETE FROM evaluations WHERE teacher_id = ?')
+        .bind(id)
+        .run()
+      
+      await db
+        .prepare('DELETE FROM evaluation_status WHERE teacher_id = ?')
+        .bind(id)
+        .run()
     }
     
     // Delete teacher (will cascade delete teacher_classes)
