@@ -423,6 +423,61 @@ app.post('/api/evaluation/submit', async (c) => {
   }
 })
 
+// Get student evaluation report for a specific teacher
+app.get('/api/evaluation/student-report/:studentId/:teacherId', async (c) => {
+  try {
+    const studentId = c.req.param('studentId')
+    const teacherId = c.req.param('teacherId')
+    const db = c.env.DB
+
+    // Get student info
+    const student = await db
+      .prepare('SELECT id, full_name, grade_level, class_name FROM users WHERE id = ? AND user_type = "student"')
+      .bind(studentId)
+      .first()
+
+    if (!student) {
+      return c.json({ success: false, message: 'الطالب غير موجود' }, 404)
+    }
+
+    // Get teacher info
+    const teacher = await db
+      .prepare('SELECT id, full_name, subject FROM teachers WHERE id = ?')
+      .bind(teacherId)
+      .first()
+
+    if (!teacher) {
+      return c.json({ success: false, message: 'المعلم غير موجود' }, 404)
+    }
+
+    // Get evaluations
+    const evaluations = await db
+      .prepare(`
+        SELECT 
+          e.score,
+          ec.title as criteria_title,
+          ec.max_score,
+          e.created_at
+        FROM evaluations e
+        JOIN evaluation_criteria ec ON e.criteria_id = ec.id
+        WHERE e.student_id = ? AND e.teacher_id = ? AND e.academic_year = '2025'
+        ORDER BY ec.display_order
+      `)
+      .bind(studentId, teacherId)
+      .all()
+
+    return c.json({
+      success: true,
+      student,
+      teacher,
+      evaluations: evaluations.results
+    })
+  } catch (error) {
+    console.error('Error getting student evaluation report:', error)
+    return c.json({ success: false, message: 'حدث خطأ في جلب تقرير التقييم' }, 500)
+  }
+})
+
 // ============================================
 // API Routes - Admin - Criteria Management
 // ============================================
@@ -853,6 +908,73 @@ app.delete('/api/admin/students/:id', async (c) => {
   }
 })
 
+// Bulk upload students from Excel
+app.post('/api/admin/students/bulk-upload', async (c) => {
+  try {
+    const { students } = await c.req.json()
+    const db = c.env.DB
+    
+    if (!students || !Array.isArray(students) || students.length === 0) {
+      return c.json({ success: false, message: 'لا توجد بيانات للرفع' }, 400)
+    }
+    
+    let inserted = 0
+    let skipped = 0
+    const errors = []
+    
+    for (const student of students) {
+      try {
+        // Check if username already exists
+        const existing = await db
+          .prepare('SELECT id FROM users WHERE username = ?')
+          .bind(student.username)
+          .first()
+        
+        if (existing) {
+          skipped++
+          errors.push(`اسم المستخدم ${student.username} موجود مسبقاً`)
+          continue
+        }
+        
+        // Insert student
+        await db
+          .prepare(`
+            INSERT INTO users (username, password, full_name, email, phone, user_type, grade_level, class_name, student_id, gender)
+            VALUES (?, ?, ?, ?, ?, 'student', ?, ?, ?, ?)
+          `)
+          .bind(
+            student.username,
+            student.password, // Note: In production, hash the password
+            student.full_name,
+            student.email,
+            student.phone,
+            student.grade_level,
+            student.class_name,
+            student.student_id,
+            student.gender
+          )
+          .run()
+        
+        inserted++
+      } catch (error) {
+        skipped++
+        errors.push(`خطأ في الصف: ${student.full_name}`)
+      }
+    }
+    
+    return c.json({ 
+      success: true, 
+      inserted,
+      skipped,
+      errors: errors.slice(0, 10), // Return first 10 errors only
+      message: `تم رفع ${inserted} طالب، تم تخطي ${skipped}`
+    })
+  } catch (error) {
+    console.error('Error bulk uploading students:', error)
+    return c.json({ success: false, message: 'حدث خطأ في رفع البيانات' }, 500)
+  }
+})
+
 // ============================================
 // API Routes - Admin - Teachers Management
 // ============================================
@@ -1002,6 +1124,71 @@ app.delete('/api/admin/teachers/:id', async (c) => {
     return c.json({ success: true, message: 'تم حذف المعلم بنجاح' })
   } catch (error) {
     return c.json({ success: false, message: 'حدث خطأ في حذف المعلم' }, 500)
+  }
+})
+
+// Bulk upload teachers from Excel
+app.post('/api/admin/teachers/bulk-upload', async (c) => {
+  try {
+    const { teachers } = await c.req.json()
+    const db = c.env.DB
+    
+    if (!teachers || !Array.isArray(teachers) || teachers.length === 0) {
+      return c.json({ success: false, message: 'لا توجد بيانات للرفع' }, 400)
+    }
+    
+    let inserted = 0
+    let skipped = 0
+    const errors = []
+    
+    for (const teacher of teachers) {
+      try {
+        // Check if employee_id already exists
+        const existing = await db
+          .prepare('SELECT id FROM teachers WHERE employee_id = ?')
+          .bind(teacher.employee_id)
+          .first()
+        
+        if (existing) {
+          skipped++
+          errors.push(`الرقم الوظيفي ${teacher.employee_id} موجود مسبقاً`)
+          continue
+        }
+        
+        // Insert teacher
+        await db
+          .prepare(`
+            INSERT INTO teachers (employee_id, full_name, subject, specialization, email, phone, gender)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+          `)
+          .bind(
+            teacher.employee_id,
+            teacher.full_name,
+            teacher.subject,
+            teacher.specialization,
+            teacher.email,
+            teacher.phone,
+            teacher.gender
+          )
+          .run()
+        
+        inserted++
+      } catch (error) {
+        skipped++
+        errors.push(`خطأ في الصف: ${teacher.full_name}`)
+      }
+    }
+    
+    return c.json({ 
+      success: true, 
+      inserted,
+      skipped,
+      errors: errors.slice(0, 10),
+      message: `تم رفع ${inserted} معلم، تم تخطي ${skipped}`
+    })
+  } catch (error) {
+    console.error('Error bulk uploading teachers:', error)
+    return c.json({ success: false, message: 'حدث خطأ في رفع البيانات' }, 500)
   }
 })
 
@@ -1308,7 +1495,9 @@ app.get('/', (c) => {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="/static/js/pdf-export.js"></script>
+    <script src="/static/js/excel-handler.js"></script>
     <script src="/static/js/app.js"></script>
 </body>
 </html>
