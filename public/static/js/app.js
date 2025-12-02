@@ -168,16 +168,65 @@ function showLoginPage() {
     <div class="min-h-screen flex flex-col" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
       
       <!-- Header with Logo -->
-      <div class="text-center pt-12 pb-6">
-        <div class="inline-block mb-4">
-          <img src="/static/images/logo.png" alt="شعار المجمع" class="h-32 w-auto mx-auto drop-shadow-2xl" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-          <div style="display:none;" class="bg-white rounded-full p-6 shadow-2xl">
-            <i class="fas fa-graduation-cap text-purple-600" style="font-size: 4rem;"></i>
+      <div class="text-center pt-8 pb-6">
+        <div class="inline-block mb-6 logo-3d-container">
+          <img 
+            src="/static/images/logo.png" 
+            alt="شعار متوسطة آفاق المنصورة الأهلية" 
+            class="logo-3d mx-auto" 
+            style="
+              height: 180px;
+              width: auto;
+              filter: drop-shadow(0 20px 40px rgba(0,0,0,0.3))
+                      drop-shadow(0 10px 20px rgba(0,0,0,0.2))
+                      drop-shadow(0 0 60px rgba(255,255,255,0.4));
+              transform: perspective(1000px) rotateY(0deg);
+              transition: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+              animation: float 6s ease-in-out infinite;
+            "
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+          >
+          <div style="display:none;" class="bg-white rounded-full p-8 shadow-2xl inline-block">
+            <i class="fas fa-graduation-cap text-purple-600" style="font-size: 5rem;"></i>
           </div>
         </div>
-        <h1 class="text-4xl md:text-5xl font-bold text-white mb-3 drop-shadow-lg">${settings.school_name || 'المجمع التعليمي'}</h1>
-        <p class="text-xl md:text-2xl text-white opacity-90 drop-shadow">قسم التقييم والجودة</p>
+        <h1 class="text-4xl md:text-5xl font-bold text-white mb-3 drop-shadow-lg" style="text-shadow: 0 4px 8px rgba(0,0,0,0.3);">
+          ${settings.school_name || 'متوسطة آفاق المنصورة الأهلية'}
+        </h1>
+        <p class="text-xl md:text-2xl text-white opacity-90 drop-shadow" style="text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+          قسم التقييم والجودة
+        </p>
       </div>
+      
+      <style>
+        @keyframes float {
+          0%, 100% {
+            transform: perspective(1000px) rotateY(0deg) translateY(0px);
+          }
+          25% {
+            transform: perspective(1000px) rotateY(5deg) translateY(-10px);
+          }
+          50% {
+            transform: perspective(1000px) rotateY(0deg) translateY(-15px);
+          }
+          75% {
+            transform: perspective(1000px) rotateY(-5deg) translateY(-10px);
+          }
+        }
+        
+        .logo-3d:hover {
+          transform: perspective(1000px) rotateY(15deg) scale(1.1);
+          filter: drop-shadow(0 25px 50px rgba(0,0,0,0.4))
+                  drop-shadow(0 15px 30px rgba(0,0,0,0.3))
+                  drop-shadow(0 0 80px rgba(255,255,255,0.6));
+        }
+        
+        @media (max-width: 768px) {
+          .logo-3d {
+            height: 140px !important;
+          }
+        }
+      </style>
 
       <!-- Main Message Section -->
       <div class="flex-1 flex items-center justify-center px-4 pb-12">

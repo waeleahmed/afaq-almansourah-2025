@@ -1516,14 +1516,53 @@ app.get('/api/settings', async (c) => {
     const db = c.env.DB
     const settings = await db.prepare('SELECT * FROM settings').all()
     
+    // First, get values from database
     const settingsObj: Record<string, string> = {}
     settings.results.forEach((setting: any) => {
       settingsObj[setting.setting_key] = setting.setting_value
+    })
+    
+    // Then, apply defaults for missing values (will override school_name)
+    const defaults = {
+      school_name: 'متوسطة آفاق المنصورة الأهلية',
+      school_logo: '/static/images/logo.png',
+      academic_year: '2025',
+      evaluation_enabled: 'true',
+      min_evaluations: '5'
+    }
+    
+    // Override school_name with our new name
+    settingsObj.school_name = defaults.school_name
+    
+    // Fill in any missing values
+    Object.keys(defaults).forEach(key => {
+      if (!settingsObj[key]) {
+        settingsObj[key] = defaults[key as keyof typeof defaults]
+      }
     })
 
     return c.json({ success: true, settings: settingsObj })
   } catch (error) {
     return c.json({ success: false, message: 'حدث خطأ في جلب الإعدادات' }, 500)
+  }
+})
+
+// Update settings (admin only)
+app.post('/api/admin/settings', async (c) => {
+  try {
+    const { school_name } = await c.req.json()
+    const db = c.env.DB
+    
+    if (school_name) {
+      await db
+        .prepare('UPDATE settings SET setting_value = ? WHERE setting_key = ?')
+        .bind(school_name, 'school_name')
+        .run()
+    }
+    
+    return c.json({ success: true, message: 'تم تحديث الإعدادات بنجاح' })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في تحديث الإعدادات' }, 500)
   }
 })
 
