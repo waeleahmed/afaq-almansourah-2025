@@ -3,6 +3,127 @@ let currentUser = null;
 let currentTeacher = null;
 let evaluationCriteria = [];
 let settings = {};
+let notifications = [];
+
+// ============================================
+// Advanced Toast Notification System
+// ============================================
+class ToastNotification {
+  constructor() {
+    this.container = this.createContainer();
+  }
+
+  createContainer() {
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.className = 'toast-container';
+      document.body.appendChild(container);
+    }
+    return container;
+  }
+
+  show(options) {
+    const {
+      title = '',
+      message = '',
+      type = 'success',
+      duration = 5000,
+      closable = true
+    } = options;
+
+    const icons = {
+      success: 'fa-check-circle',
+      error: 'fa-exclamation-circle',
+      warning: 'fa-exclamation-triangle',
+      info: 'fa-info-circle'
+    };
+
+    const titles = {
+      success: 'نجح',
+      error: 'خطأ',
+      warning: 'تحذير',
+      info: 'معلومة'
+    };
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+      <div class="toast-icon">
+        <i class="fas ${icons[type]}"></i>
+      </div>
+      <div class="toast-content">
+        <div class="toast-title">${title || titles[type]}</div>
+        ${message ? `<div class="toast-message">${message}</div>` : ''}
+      </div>
+      ${closable ? '<div class="toast-close"><i class="fas fa-times"></i></div>' : ''}
+    `;
+
+    this.container.appendChild(toast);
+
+    // Add close button functionality
+    if (closable) {
+      const closeBtn = toast.querySelector('.toast-close');
+      closeBtn.addEventListener('click', () => this.remove(toast));
+    }
+
+    // Auto remove after duration
+    if (duration > 0) {
+      setTimeout(() => this.remove(toast), duration);
+    }
+
+    return toast;
+  }
+
+  remove(toast) {
+    toast.classList.add('removing');
+    setTimeout(() => {
+      if (toast.parentElement) {
+        toast.remove();
+      }
+    }, 300);
+  }
+
+  success(message, title = '') {
+    return this.show({ type: 'success', message, title });
+  }
+
+  error(message, title = '') {
+    return this.show({ type: 'error', message, title });
+  }
+
+  warning(message, title = '') {
+    return this.show({ type: 'warning', message, title });
+  }
+
+  info(message, title = '') {
+    return this.show({ type: 'info', message, title });
+  }
+}
+
+// Create global toast instance
+const toast = new ToastNotification();
+
+// Legacy compatibility functions
+function showNotification(message, type = 'success') {
+  toast.show({ message, type });
+}
+
+function notifySuccess(message, title = '') {
+  toast.success(message, title);
+}
+
+function notifyError(message, title = '') {
+  toast.error(message, title);
+}
+
+function notifyWarning(message, title = '') {
+  toast.warning(message, title);
+}
+
+function notifyInfo(message, title = '') {
+  toast.info(message, title);
+}
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
@@ -665,20 +786,20 @@ async function showAdminDashboard() {
             <p class="text-gray-600 mt-2 text-sm">إضافة وتعديل المعايير</p>
           </div>
 
-          <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="showTeachersManagement()">
+          <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="showTeachersManagementFull()">
             <div class="icon-3d inline-block mb-4">
               <i class="fas fa-chalkboard-teacher text-purple-600" style="font-size: 3rem;"></i>
             </div>
             <h3 class="text-xl font-bold text-gray-800">إدارة المعلمين</h3>
-            <p class="text-gray-600 mt-2 text-sm">عرض وإدارة المعلمين</p>
+            <p class="text-gray-600 mt-2 text-sm">عرض وإدارة المعلمين (CRUD)</p>
           </div>
 
-          <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="alert('قريباً')">
+          <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="showStudentsManagement()">
             <div class="icon-3d inline-block mb-4">
               <i class="fas fa-users text-orange-600" style="font-size: 3rem;"></i>
             </div>
             <h3 class="text-xl font-bold text-gray-800">إدارة الطلاب</h3>
-            <p class="text-gray-600 mt-2 text-sm">عرض وإدارة الطلاب</p>
+            <p class="text-gray-600 mt-2 text-sm">عرض وإدارة الطلاب (CRUD)</p>
           </div>
         </div>
       </div>
@@ -1213,7 +1334,7 @@ async function showReportsPage() {
       <div class="max-w-7xl mx-auto fade-in">
         <!-- Header -->
         <div class="glass-card p-6 mb-8">
-          <div class="flex justify-between items-center">
+          <div class="flex justify-between items-center mb-4">
             <div>
               <h2 class="text-3xl font-bold text-gray-800">التقارير والرسوم البيانية</h2>
               <p class="text-gray-600 text-lg mt-1">عرض الإحصائيات والمقارنات</p>
@@ -1221,6 +1342,22 @@ async function showReportsPage() {
             <button onclick="showAdminDashboard()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold">
               <i class="fas fa-arrow-right ml-2"></i>
               رجوع
+            </button>
+          </div>
+          
+          <!-- Export Buttons -->
+          <div class="flex gap-3 flex-wrap mt-4 pt-4 border-t border-gray-200">
+            <button onclick="pdfExporter.exportComprehensiveReport()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold">
+              <i class="fas fa-file-pdf ml-2"></i>
+              تصدير التقرير الشامل
+            </button>
+            <button onclick="pdfExporter.exportSubjectComparison()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold">
+              <i class="fas fa-book ml-2"></i>
+              تصدير مقارنة المواد
+            </button>
+            <button onclick="pdfExporter.exportClassComparison()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold">
+              <i class="fas fa-school ml-2"></i>
+              تصدير مقارنة الفصول
             </button>
           </div>
         </div>
@@ -1367,7 +1504,9 @@ async function showReportsPage() {
 async function showTeacherReport(teacherId) {
   try {
     const response = await axios.get(`/api/admin/teacher-report/${teacherId}`);
-    const { teacher, criteriaStats, classStats } = response.data;
+    const { teacher, criteria, classes } = response.data;
+    const criteriaStats = criteria || [];
+    const classStats = classes || [];
     
     const app = document.getElementById('app');
     app.innerHTML = `
@@ -1382,10 +1521,16 @@ async function showTeacherReport(teacherId) {
                 ${teacher.subject} - ${teacher.specialization || 'غير محدد'}
               </p>
             </div>
-            <button onclick="showTeachersManagement()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold">
-              <i class="fas fa-arrow-right ml-2"></i>
-              رجوع
-            </button>
+            <div class="flex gap-4">
+              <button onclick="exportTeacherReportPDF(${teacherId}, '${teacher.full_name.replace(/'/g, "\\'")}', '${teacher.subject}')" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold">
+                <i class="fas fa-file-pdf ml-2"></i>
+                تصدير PDF
+              </button>
+              <button onclick="showTeachersManagement()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold">
+                <i class="fas fa-arrow-right ml-2"></i>
+                رجوع
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1406,14 +1551,15 @@ async function showTeacherReport(teacherId) {
           </h3>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             ${classStats.map(cls => {
-              const percentage = ((cls.avg_score / 10) * 100).toFixed(0);
+              const avgScore = cls.average_score || 0;
+              const percentage = ((avgScore / 10) * 100).toFixed(0);
               return `
                 <div class="glass-card p-6 text-center">
-                  <h4 class="text-lg font-bold text-gray-800 mb-3">${cls.class_name}</h4>
+                  <h4 class="text-lg font-bold text-gray-800 mb-3">${cls.grade_level} - ${cls.class_name}</h4>
                   <div class="text-4xl font-bold text-purple-600 mb-2">
-                    ${parseFloat(cls.avg_score).toFixed(2)}/10
+                    ${parseFloat(avgScore).toFixed(2)}/10
                   </div>
-                  <p class="text-gray-600 mb-3">${cls.student_count} طالب</p>
+                  <p class="text-gray-600 mb-3">${cls.student_count || 0} طالب</p>
                   <div class="w-full bg-gray-200 rounded-full h-3">
                     <div class="bg-gradient-to-r from-purple-500 to-blue-500 h-3 rounded-full" style="width: ${percentage}%"></div>
                   </div>
@@ -1442,7 +1588,8 @@ async function showTeacherReport(teacherId) {
               </thead>
               <tbody>
                 ${criteriaStats.map(stat => {
-                  const percentage = ((stat.avg_score / stat.max_score) * 100).toFixed(0);
+                  const avgScore = stat.average_score || 0;
+                  const percentage = ((avgScore / stat.max_score) * 100).toFixed(0);
                   let ratingClass = 'bg-red-100 text-red-800';
                   let ratingText = 'ضعيف';
                   
@@ -1462,9 +1609,9 @@ async function showTeacherReport(teacherId) {
                   
                   return `
                     <tr class="border-b border-gray-200">
-                      <td class="py-3 px-4 font-semibold">${stat.criteria_title}</td>
-                      <td class="py-3 px-4 text-center">${stat.evaluation_count}</td>
-                      <td class="py-3 px-4 text-center font-bold">${parseFloat(stat.avg_score).toFixed(2)}/${stat.max_score}</td>
+                      <td class="py-3 px-4 font-semibold">${stat.title}</td>
+                      <td class="py-3 px-4 text-center">${stat.evaluation_count || 0}</td>
+                      <td class="py-3 px-4 text-center font-bold">${parseFloat(avgScore).toFixed(2)}/${stat.max_score}</td>
                       <td class="py-3 px-4 text-center">
                         <div class="flex items-center justify-center gap-2">
                           <span class="font-bold">${percentage}%</span>
@@ -1492,10 +1639,10 @@ async function showTeacherReport(teacherId) {
     new Chart(document.getElementById('criteriaChart'), {
       type: 'radar',
       data: {
-        labels: criteriaStats.map(s => s.criteria_title),
+        labels: criteriaStats.map(s => s.title),
         datasets: [{
           label: 'التقييم',
-          data: criteriaStats.map(s => parseFloat(s.avg_score)),
+          data: criteriaStats.map(s => parseFloat(s.average_score || 0)),
           backgroundColor: 'rgba(102, 126, 234, 0.2)',
           borderColor: 'rgba(102, 126, 234, 1)',
           borderWidth: 2,
@@ -1532,6 +1679,748 @@ async function showTeacherReport(teacherId) {
   } catch (error) {
     console.error('Error loading teacher report:', error);
   }
+}
+
+// ============================================
+// Students Management
+// ============================================
+async function showStudentsManagement() {
+  try {
+    const response = await axios.get('/api/admin/students');
+    const students = response.data.students || [];
+    
+    const app = document.getElementById('app');
+    app.innerHTML = `
+      <div class="max-w-7xl mx-auto fade-in">
+        <!-- Header -->
+        <div class="glass-card p-6 mb-8">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-3xl font-bold text-gray-800">إدارة الطلاب</h2>
+              <p class="text-gray-600 text-lg mt-1">عرض وإدارة جميع الطلاب</p>
+            </div>
+            <div class="flex gap-4">
+              <button onclick="showAddStudentModal()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold">
+                <i class="fas fa-plus ml-2"></i>
+                إضافة طالب جديد
+              </button>
+              <button onclick="showAdminDashboard()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold">
+                <i class="fas fa-arrow-right ml-2"></i>
+                رجوع
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Students Table -->
+        <div class="glass-card p-8">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b-2 border-gray-300">
+                  <th class="text-right py-3 px-4 font-bold text-gray-700">اسم المستخدم</th>
+                  <th class="text-right py-3 px-4 font-bold text-gray-700">الاسم الكامل</th>
+                  <th class="text-right py-3 px-4 font-bold text-gray-700">الرقم الطلابي</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">الصف</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">الفصل</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">الجنس</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">التقييمات</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${students.map(student => `
+                  <tr class="border-b border-gray-200 hover:bg-gray-50">
+                    <td class="py-3 px-4">${student.username}</td>
+                    <td class="py-3 px-4 font-semibold">${student.full_name}</td>
+                    <td class="py-3 px-4">${student.student_id || '-'}</td>
+                    <td class="py-3 px-4 text-center">${student.grade_level}</td>
+                    <td class="py-3 px-4 text-center">${student.class_name}</td>
+                    <td class="py-3 px-4 text-center">${student.gender === 'male' ? '👨‍🎓' : '👩‍🎓'}</td>
+                    <td class="py-3 px-4 text-center">
+                      <span class="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold">
+                        ${student.completed_evaluations || 0}
+                      </span>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                      <div class="flex justify-center gap-2">
+                        <button 
+                          onclick='editStudent(${JSON.stringify(student)})' 
+                          class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                          title="تعديل"
+                        >
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button 
+                          onclick="deleteStudent(${student.id}, '${student.full_name}')" 
+                          class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+                          title="حذف"
+                        >
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Container -->
+      <div id="modalContainer"></div>
+    `;
+  } catch (error) {
+    console.error('Error loading students:', error);
+  }
+}
+
+// Show add student modal
+function showAddStudentModal() {
+  const modal = document.getElementById('modalContainer');
+  modal.innerHTML = `
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeModal(event)">
+      <div class="glass-card p-8 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+        <h3 class="text-2xl font-bold text-gray-800 mb-6">إضافة طالب جديد</h3>
+        
+        <form id="addStudentForm" class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">اسم المستخدم *</label>
+            <input type="text" id="studentUsername" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">كلمة المرور *</label>
+            <input type="password" id="studentPassword" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+          </div>
+
+          <div class="col-span-2">
+            <label class="block text-gray-700 font-semibold mb-2">الاسم الكامل *</label>
+            <input type="text" id="studentFullName" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">الرقم الطلابي</label>
+            <input type="text" id="studentId" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">الجنس *</label>
+            <select id="studentGender" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+              <option value="">اختر الجنس</option>
+              <option value="male">ذكر</option>
+              <option value="female">أنثى</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">المرحلة الدراسية *</label>
+            <input type="text" id="studentGradeLevel" placeholder="مثال: متوسط أول" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">الفصل *</label>
+            <input type="text" id="studentClassName" placeholder="مثال: 1أ" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">البريد الإلكتروني</label>
+            <input type="email" id="studentEmail" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">رقم الهاتف</label>
+            <input type="tel" id="studentPhone" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none">
+          </div>
+
+          <div class="col-span-2 flex gap-4 mt-6">
+            <button type="submit" class="flex-1 btn-primary text-white py-3 rounded-lg font-bold">
+              <i class="fas fa-plus ml-2"></i>
+              إضافة الطالب
+            </button>
+            <button type="button" onclick="closeModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-bold">
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('addStudentForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const studentData = {
+      username: document.getElementById('studentUsername').value,
+      password: document.getElementById('studentPassword').value,
+      full_name: document.getElementById('studentFullName').value,
+      student_id: document.getElementById('studentId').value,
+      gender: document.getElementById('studentGender').value,
+      grade_level: document.getElementById('studentGradeLevel').value,
+      class_name: document.getElementById('studentClassName').value,
+      email: document.getElementById('studentEmail').value,
+      phone: document.getElementById('studentPhone').value
+    };
+    
+    try {
+      const response = await axios.post('/api/admin/students', studentData);
+      if (response.data.success) {
+        alert('تم إضافة الطالب بنجاح!');
+        showStudentsManagement();
+      } else {
+        alert(response.data.message);
+      }
+    } catch (error) {
+      alert('حدث خطأ في إضافة الطالب');
+    }
+  });
+}
+
+// Edit student
+function editStudent(student) {
+  const modal = document.getElementById('modalContainer');
+  modal.innerHTML = `
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeModal(event)">
+      <div class="glass-card p-8 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+        <h3 class="text-2xl font-bold text-gray-800 mb-6">تعديل بيانات الطالب</h3>
+        
+        <form id="editStudentForm" class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">اسم المستخدم *</label>
+            <input type="text" id="editStudentUsername" value="${student.username}" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">كلمة المرور الجديدة (اتركها فارغة للإبقاء)</label>
+            <input type="password" id="editStudentPassword" placeholder="اتركها فارغة إذا لم ترد التغيير" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none">
+          </div>
+
+          <div class="col-span-2">
+            <label class="block text-gray-700 font-semibold mb-2">الاسم الكامل *</label>
+            <input type="text" id="editStudentFullName" value="${student.full_name}" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">الرقم الطلابي</label>
+            <input type="text" id="editStudentId" value="${student.student_id || ''}" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">الجنس *</label>
+            <select id="editStudentGender" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+              <option value="male" ${student.gender === 'male' ? 'selected' : ''}>ذكر</option>
+              <option value="female" ${student.gender === 'female' ? 'selected' : ''}>أنثى</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">المرحلة الدراسية *</label>
+            <input type="text" id="editStudentGradeLevel" value="${student.grade_level}" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">الفصل *</label>
+            <input type="text" id="editStudentClassName" value="${student.class_name}" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">البريد الإلكتروني</label>
+            <input type="email" id="editStudentEmail" value="${student.email || ''}" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">رقم الهاتف</label>
+            <input type="tel" id="editStudentPhone" value="${student.phone || ''}" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none">
+          </div>
+
+          <div class="col-span-2 flex gap-4 mt-6">
+            <button type="submit" class="flex-1 btn-primary text-white py-3 rounded-lg font-bold">
+              <i class="fas fa-save ml-2"></i>
+              حفظ التعديلات
+            </button>
+            <button type="button" onclick="closeModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-bold">
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('editStudentForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const studentData = {
+      username: document.getElementById('editStudentUsername').value,
+      password: document.getElementById('editStudentPassword').value,
+      full_name: document.getElementById('editStudentFullName').value,
+      student_id: document.getElementById('editStudentId').value,
+      gender: document.getElementById('editStudentGender').value,
+      grade_level: document.getElementById('editStudentGradeLevel').value,
+      class_name: document.getElementById('editStudentClassName').value,
+      email: document.getElementById('editStudentEmail').value,
+      phone: document.getElementById('editStudentPhone').value
+    };
+    
+    try {
+      const response = await axios.put(`/api/admin/students/${student.id}`, studentData);
+      if (response.data.success) {
+        alert('تم تحديث بيانات الطالب بنجاح!');
+        showStudentsManagement();
+      } else {
+        alert(response.data.message);
+      }
+    } catch (error) {
+      alert('حدث خطأ في تحديث بيانات الطالب');
+    }
+  });
+}
+
+// Delete student
+async function deleteStudent(id, name) {
+  if (!confirm(`هل أنت متأكد من حذف الطالب "${name}"؟\nلن تتمكن من التراجع عن هذا الإجراء.`)) {
+    return;
+  }
+  
+  try {
+    const response = await axios.delete(`/api/admin/students/${id}`);
+    if (response.data.success) {
+      alert('تم حذف الطالب بنجاح!');
+      showStudentsManagement();
+    } else {
+      alert(response.data.message);
+    }
+  } catch (error) {
+    alert(error.response?.data?.message || 'حدث خطأ في حذف الطالب');
+  }
+}
+
+// ============================================
+// Teachers Management - Full CRUD
+// ============================================
+async function showTeachersManagementFull() {
+  try {
+    const response = await axios.get('/api/admin/teachers');
+    const teachers = response.data.teachers || [];
+    
+    const app = document.getElementById('app');
+    app.innerHTML = `
+      <div class="max-w-7xl mx-auto fade-in">
+        <!-- Header -->
+        <div class="glass-card p-6 mb-8">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-3xl font-bold text-gray-800">إدارة المعلمين</h2>
+              <p class="text-gray-600 text-lg mt-1">عرض وإدارة جميع المعلمين</p>
+            </div>
+            <div class="flex gap-4">
+              <button onclick="showAddTeacherModal()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold">
+                <i class="fas fa-plus ml-2"></i>
+                إضافة معلم جديد
+              </button>
+              <button onclick="showAdminDashboard()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold">
+                <i class="fas fa-arrow-right ml-2"></i>
+                رجوع
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Teachers Table -->
+        <div class="glass-card p-8">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b-2 border-gray-300">
+                  <th class="text-right py-3 px-4 font-bold text-gray-700">اسم المعلم</th>
+                  <th class="text-right py-3 px-4 font-bold text-gray-700">المادة</th>
+                  <th class="text-right py-3 px-4 font-bold text-gray-700">التخصص</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">الرقم الوظيفي</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">الجنس</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">الفصول</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">التقييمات</th>
+                  <th class="text-center py-3 px-4 font-bold text-gray-700">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${teachers.map(teacher => `
+                  <tr class="border-b border-gray-200 hover:bg-gray-50">
+                    <td class="py-3 px-4 font-semibold">${teacher.full_name}</td>
+                    <td class="py-3 px-4">${teacher.subject}</td>
+                    <td class="py-3 px-4 text-gray-600">${teacher.specialization || '-'}</td>
+                    <td class="py-3 px-4 text-center">${teacher.employee_id || '-'}</td>
+                    <td class="py-3 px-4 text-center">${teacher.gender === 'male' ? '👨‍🏫' : '👩‍🏫'}</td>
+                    <td class="py-3 px-4 text-center">
+                      <span class="inline-block bg-purple-100 text-purple-800 px-3 py-1 rounded-full font-semibold">
+                        ${teacher.classes_count || 0}
+                      </span>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                      <span class="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold">
+                        ${teacher.total_evaluations || 0}
+                      </span>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                      <div class="flex justify-center gap-2">
+                        <button 
+                          onclick='editTeacher(${JSON.stringify(teacher)})' 
+                          class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                          title="تعديل"
+                        >
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button 
+                          onclick="manageTeacherClasses(${teacher.id}, '${teacher.full_name}')" 
+                          class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-sm"
+                          title="إدارة الفصول"
+                        >
+                          <i class="fas fa-school"></i>
+                        </button>
+                        <button 
+                          onclick="deleteTeacher(${teacher.id}, '${teacher.full_name}')" 
+                          class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+                          title="حذف"
+                        >
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Container -->
+      <div id="modalContainer"></div>
+    `;
+  } catch (error) {
+    console.error('Error loading teachers:', error);
+  }
+}
+
+// Show add teacher modal
+function showAddTeacherModal() {
+  const modal = document.getElementById('modalContainer');
+  modal.innerHTML = `
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeModal(event)">
+      <div class="glass-card p-8 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+        <h3 class="text-2xl font-bold text-gray-800 mb-6">إضافة معلم جديد</h3>
+        
+        <form id="addTeacherForm" class="grid grid-cols-2 gap-4">
+          <div class="col-span-2">
+            <label class="block text-gray-700 font-semibold mb-2">الاسم الكامل *</label>
+            <input type="text" id="teacherFullName" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">المادة *</label>
+            <input type="text" id="teacherSubject" placeholder="مثال: رياضيات" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">التخصص</label>
+            <input type="text" id="teacherSpecialization" placeholder="مثال: رياضيات تطبيقية" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">الرقم الوظيفي</label>
+            <input type="text" id="teacherEmployeeId" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">الجنس *</label>
+            <select id="teacherGender" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+              <option value="">اختر الجنس</option>
+              <option value="male">ذكر</option>
+              <option value="female">أنثى</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">البريد الإلكتروني</label>
+            <input type="email" id="teacherEmail" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">رقم الهاتف</label>
+            <input type="tel" id="teacherPhone" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none">
+          </div>
+
+          <div class="col-span-2 flex gap-4 mt-6">
+            <button type="submit" class="flex-1 btn-primary text-white py-3 rounded-lg font-bold">
+              <i class="fas fa-plus ml-2"></i>
+              إضافة المعلم
+            </button>
+            <button type="button" onclick="closeModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-bold">
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('addTeacherForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const teacherData = {
+      full_name: document.getElementById('teacherFullName').value,
+      subject: document.getElementById('teacherSubject').value,
+      specialization: document.getElementById('teacherSpecialization').value,
+      employee_id: document.getElementById('teacherEmployeeId').value,
+      gender: document.getElementById('teacherGender').value,
+      email: document.getElementById('teacherEmail').value,
+      phone: document.getElementById('teacherPhone').value,
+      photo_url: null
+    };
+    
+    try {
+      const response = await axios.post('/api/admin/teachers', teacherData);
+      if (response.data.success) {
+        alert('تم إضافة المعلم بنجاح!');
+        showTeachersManagementFull();
+      } else {
+        alert(response.data.message);
+      }
+    } catch (error) {
+      alert('حدث خطأ في إضافة المعلم');
+    }
+  });
+}
+
+// Edit teacher
+function editTeacher(teacher) {
+  const modal = document.getElementById('modalContainer');
+  modal.innerHTML = `
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeModal(event)">
+      <div class="glass-card p-8 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+        <h3 class="text-2xl font-bold text-gray-800 mb-6">تعديل بيانات المعلم</h3>
+        
+        <form id="editTeacherForm" class="grid grid-cols-2 gap-4">
+          <div class="col-span-2">
+            <label class="block text-gray-700 font-semibold mb-2">الاسم الكامل *</label>
+            <input type="text" id="editTeacherFullName" value="${teacher.full_name}" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">المادة *</label>
+            <input type="text" id="editTeacherSubject" value="${teacher.subject}" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">التخصص</label>
+            <input type="text" id="editTeacherSpecialization" value="${teacher.specialization || ''}" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">الرقم الوظيفي</label>
+            <input type="text" id="editTeacherEmployeeId" value="${teacher.employee_id || ''}" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">الجنس *</label>
+            <select id="editTeacherGender" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+              <option value="male" ${teacher.gender === 'male' ? 'selected' : ''}>ذكر</option>
+              <option value="female" ${teacher.gender === 'female' ? 'selected' : ''}>أنثى</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">البريد الإلكتروني</label>
+            <input type="email" id="editTeacherEmail" value="${teacher.email || ''}" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">رقم الهاتف</label>
+            <input type="tel" id="editTeacherPhone" value="${teacher.phone || ''}" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none">
+          </div>
+
+          <div class="col-span-2 flex gap-4 mt-6">
+            <button type="submit" class="flex-1 btn-primary text-white py-3 rounded-lg font-bold">
+              <i class="fas fa-save ml-2"></i>
+              حفظ التعديلات
+            </button>
+            <button type="button" onclick="closeModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-bold">
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('editTeacherForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const teacherData = {
+      full_name: document.getElementById('editTeacherFullName').value,
+      subject: document.getElementById('editTeacherSubject').value,
+      specialization: document.getElementById('editTeacherSpecialization').value,
+      employee_id: document.getElementById('editTeacherEmployeeId').value,
+      gender: document.getElementById('editTeacherGender').value,
+      email: document.getElementById('editTeacherEmail').value,
+      phone: document.getElementById('editTeacherPhone').value,
+      photo_url: teacher.photo_url
+    };
+    
+    try {
+      const response = await axios.put(`/api/admin/teachers/${teacher.id}`, teacherData);
+      if (response.data.success) {
+        alert('تم تحديث بيانات المعلم بنجاح!');
+        showTeachersManagementFull();
+      } else {
+        alert(response.data.message);
+      }
+    } catch (error) {
+      alert('حدث خطأ في تحديث بيانات المعلم');
+    }
+  });
+}
+
+// Delete teacher
+async function deleteTeacher(id, name) {
+  if (!confirm(`هل أنت متأكد من حذف المعلم "${name}"؟\nلن تتمكن من التراجع عن هذا الإجراء.`)) {
+    return;
+  }
+  
+  try {
+    const response = await axios.delete(`/api/admin/teachers/${id}`);
+    if (response.data.success) {
+      alert('تم حذف المعلم بنجاح!');
+      showTeachersManagementFull();
+    } else {
+      alert(response.data.message);
+    }
+  } catch (error) {
+    alert(error.response?.data?.message || 'حدث خطأ في حذف المعلم');
+  }
+}
+
+// Manage teacher classes
+async function manageTeacherClasses(teacherId, teacherName) {
+  try {
+    const response = await axios.get(`/api/admin/teachers/${teacherId}`);
+    const classes = response.data.classes || [];
+    
+    const modal = document.getElementById('modalContainer');
+    modal.innerHTML = `
+      <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeModal(event)">
+        <div class="glass-card p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+          <h3 class="text-2xl font-bold text-gray-800 mb-2">إدارة فصول المعلم</h3>
+          <p class="text-gray-600 mb-6">${teacherName}</p>
+          
+          <!-- Add New Class Assignment -->
+          <div class="bg-green-50 p-4 rounded-lg mb-6">
+            <h4 class="font-bold text-gray-800 mb-4">تعيين لفصل جديد</h4>
+            <form id="assignClassForm" class="grid grid-cols-3 gap-4">
+              <div>
+                <label class="block text-gray-700 font-semibold mb-2">المرحلة *</label>
+                <input type="text" id="assignGradeLevel" placeholder="متوسط أول" class="w-full px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+              </div>
+              <div>
+                <label class="block text-gray-700 font-semibold mb-2">الفصل *</label>
+                <input type="text" id="assignClassName" placeholder="1أ" class="w-full px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+              </div>
+              <div>
+                <label class="block text-gray-700 font-semibold mb-2">المادة *</label>
+                <input type="text" id="assignSubject" placeholder="رياضيات" class="w-full px-4 py-2 rounded-lg border-2 border-gray-300 focus:border-purple-500 focus:outline-none" required>
+              </div>
+              <div class="col-span-3">
+                <button type="submit" class="btn-primary text-white px-6 py-2 rounded-lg font-semibold w-full">
+                  <i class="fas fa-plus ml-2"></i>
+                  إضافة تعيين
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Current Assignments -->
+          <h4 class="font-bold text-gray-800 mb-4">التعيينات الحالية</h4>
+          <div class="space-y-3">
+            ${classes.length > 0 ? classes.map(cls => `
+              <div class="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
+                <div>
+                  <span class="font-semibold text-gray-800">${cls.grade_level}</span>
+                  <span class="text-gray-600 mx-2">-</span>
+                  <span class="font-semibold text-gray-800">${cls.class_name}</span>
+                  <span class="text-gray-600 mx-2">|</span>
+                  <span class="text-purple-600">${cls.subject}</span>
+                </div>
+                <button 
+                  onclick="removeTeacherClass(${teacherId}, ${cls.id}, '${teacherName}')"
+                  class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded font-semibold"
+                >
+                  <i class="fas fa-times ml-2"></i>
+                  إلغاء
+                </button>
+              </div>
+            `).join('') : '<p class="text-gray-600 text-center py-4">لا توجد تعيينات حالياً</p>'}
+          </div>
+
+          <div class="mt-6">
+            <button onclick="closeModal()" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-bold">
+              إغلاق
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('assignClassForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const assignmentData = {
+        grade_level: document.getElementById('assignGradeLevel').value,
+        class_name: document.getElementById('assignClassName').value,
+        subject: document.getElementById('assignSubject').value
+      };
+      
+      try {
+        const response = await axios.post(`/api/admin/teachers/${teacherId}/classes`, assignmentData);
+        if (response.data.success) {
+          alert('تم تعيين المعلم للفصل بنجاح!');
+          manageTeacherClasses(teacherId, teacherName);
+        } else {
+          alert(response.data.message);
+        }
+      } catch (error) {
+        alert('حدث خطأ في تعيين المعلم');
+      }
+    });
+  } catch (error) {
+    console.error('Error loading teacher classes:', error);
+  }
+}
+
+// Remove teacher class
+async function removeTeacherClass(teacherId, classId, teacherName) {
+  if (!confirm('هل أنت متأكد من إلغاء هذا التعيين؟')) {
+    return;
+  }
+  
+  try {
+    const response = await axios.delete(`/api/admin/teachers/${teacherId}/classes/${classId}`);
+    if (response.data.success) {
+      alert('تم إلغاء التعيين بنجاح!');
+      manageTeacherClasses(teacherId, teacherName);
+    } else {
+      alert(response.data.message);
+    }
+  } catch (error) {
+    alert('حدث خطأ في إلغاء التعيين');
+  }
+}
+
+// ============================================
+// PDF Export
+// ============================================
+// Export teacher report PDF - Use the advanced PDF exporter
+async function exportTeacherReportPDF(teacherId, teacherName, subject) {
+  await pdfExporter.exportTeacherReport(teacherId);
 }
 
 // Logout

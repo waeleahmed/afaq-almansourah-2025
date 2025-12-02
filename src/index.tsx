@@ -700,6 +700,357 @@ app.get('/api/admin/stats/by-class', async (c) => {
 })
 
 // ============================================
+// API Routes - Admin - Students Management
+// ============================================
+
+// Get all students
+app.get('/api/admin/students', async (c) => {
+  try {
+    const db = c.env.DB
+    const students = await db
+      .prepare(`
+        SELECT 
+          u.*,
+          COUNT(DISTINCT es.teacher_id) as completed_evaluations
+        FROM users u
+        LEFT JOIN evaluation_status es ON u.id = es.student_id AND es.is_completed = 1
+        WHERE u.user_type = 'student'
+        GROUP BY u.id
+        ORDER BY u.grade_level, u.class_name, u.full_name
+      `)
+      .all()
+    
+    return c.json({ success: true, students: students.results })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في جلب الطلاب' }, 500)
+  }
+})
+
+// Get student by ID
+app.get('/api/admin/students/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const db = c.env.DB
+    
+    const student = await db
+      .prepare('SELECT * FROM users WHERE id = ? AND user_type = "student"')
+      .bind(id)
+      .first()
+    
+    if (!student) {
+      return c.json({ success: false, message: 'الطالب غير موجود' }, 404)
+    }
+    
+    return c.json({ success: true, student })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في جلب بيانات الطالب' }, 500)
+  }
+})
+
+// Add new student
+app.post('/api/admin/students', async (c) => {
+  try {
+    const { username, password, full_name, email, phone, grade_level, class_name, student_id, gender } = await c.req.json()
+    const db = c.env.DB
+    
+    // Check if username exists
+    const existing = await db
+      .prepare('SELECT id FROM users WHERE username = ?')
+      .bind(username)
+      .first()
+    
+    if (existing) {
+      return c.json({ success: false, message: 'اسم المستخدم موجود مسبقاً' }, 400)
+    }
+    
+    const result = await db
+      .prepare(`
+        INSERT INTO users (username, password, full_name, email, phone, user_type, grade_level, class_name, student_id, gender)
+        VALUES (?, ?, ?, ?, ?, 'student', ?, ?, ?, ?)
+      `)
+      .bind(username, password, full_name, email || null, phone || null, grade_level, class_name, student_id, gender)
+      .run()
+    
+    return c.json({ success: true, message: 'تم إضافة الطالب بنجاح', studentId: result.meta.last_row_id })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في إضافة الطالب' }, 500)
+  }
+})
+
+// Update student
+app.put('/api/admin/students/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const { username, password, full_name, email, phone, grade_level, class_name, student_id, gender } = await c.req.json()
+    const db = c.env.DB
+    
+    // Check if username exists for another student
+    const existing = await db
+      .prepare('SELECT id FROM users WHERE username = ? AND id != ?')
+      .bind(username, id)
+      .first()
+    
+    if (existing) {
+      return c.json({ success: false, message: 'اسم المستخدم موجود مسبقاً' }, 400)
+    }
+    
+    // Update with or without password
+    if (password && password.trim() !== '') {
+      await db
+        .prepare(`
+          UPDATE users 
+          SET username = ?, password = ?, full_name = ?, email = ?, phone = ?, 
+              grade_level = ?, class_name = ?, student_id = ?, gender = ?, updated_at = datetime('now')
+          WHERE id = ? AND user_type = 'student'
+        `)
+        .bind(username, password, full_name, email || null, phone || null, grade_level, class_name, student_id, gender, id)
+        .run()
+    } else {
+      await db
+        .prepare(`
+          UPDATE users 
+          SET username = ?, full_name = ?, email = ?, phone = ?, 
+              grade_level = ?, class_name = ?, student_id = ?, gender = ?, updated_at = datetime('now')
+          WHERE id = ? AND user_type = 'student'
+        `)
+        .bind(username, full_name, email || null, phone || null, grade_level, class_name, student_id, gender, id)
+        .run()
+    }
+    
+    return c.json({ success: true, message: 'تم تحديث بيانات الطالب بنجاح' })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في تحديث بيانات الطالب' }, 500)
+  }
+})
+
+// Delete student
+app.delete('/api/admin/students/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const db = c.env.DB
+    
+    // Check if student has evaluations
+    const evaluations = await db
+      .prepare('SELECT COUNT(*) as count FROM evaluations WHERE student_id = ?')
+      .bind(id)
+      .first()
+    
+    if (evaluations && evaluations.count > 0) {
+      return c.json({ 
+        success: false, 
+        message: 'لا يمكن حذف الطالب لوجود تقييمات مرتبطة به' 
+      }, 400)
+    }
+    
+    await db
+      .prepare('DELETE FROM users WHERE id = ? AND user_type = "student"')
+      .bind(id)
+      .run()
+    
+    return c.json({ success: true, message: 'تم حذف الطالب بنجاح' })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في حذف الطالب' }, 500)
+  }
+})
+
+// ============================================
+// API Routes - Admin - Teachers Management
+// ============================================
+
+// Get all teachers with details
+app.get('/api/admin/teachers', async (c) => {
+  try {
+    const db = c.env.DB
+    const teachers = await db
+      .prepare(`
+        SELECT 
+          t.*,
+          COUNT(DISTINCT tc.id) as classes_count,
+          COUNT(DISTINCT e.student_id) as total_evaluations
+        FROM teachers t
+        LEFT JOIN teacher_classes tc ON t.id = tc.teacher_id
+        LEFT JOIN evaluations e ON t.id = e.teacher_id
+        GROUP BY t.id
+        ORDER BY t.full_name
+      `)
+      .all()
+    
+    return c.json({ success: true, teachers: teachers.results })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في جلب المعلمين' }, 500)
+  }
+})
+
+// Get teacher by ID with classes
+app.get('/api/admin/teachers/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const db = c.env.DB
+    
+    const teacher = await db
+      .prepare('SELECT * FROM teachers WHERE id = ?')
+      .bind(id)
+      .first()
+    
+    if (!teacher) {
+      return c.json({ success: false, message: 'المعلم غير موجود' }, 404)
+    }
+    
+    const classes = await db
+      .prepare('SELECT * FROM teacher_classes WHERE teacher_id = ?')
+      .bind(id)
+      .all()
+    
+    return c.json({ success: true, teacher, classes: classes.results })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في جلب بيانات المعلم' }, 500)
+  }
+})
+
+// Add new teacher
+app.post('/api/admin/teachers', async (c) => {
+  try {
+    const { full_name, subject, specialization, email, phone, gender, employee_id, photo_url } = await c.req.json()
+    const db = c.env.DB
+    
+    // Check if employee_id exists
+    if (employee_id) {
+      const existing = await db
+        .prepare('SELECT id FROM teachers WHERE employee_id = ?')
+        .bind(employee_id)
+        .first()
+      
+      if (existing) {
+        return c.json({ success: false, message: 'الرقم الوظيفي موجود مسبقاً' }, 400)
+      }
+    }
+    
+    const result = await db
+      .prepare(`
+        INSERT INTO teachers (full_name, subject, specialization, email, phone, gender, employee_id, photo_url)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `)
+      .bind(full_name, subject, specialization || null, email || null, phone || null, gender, employee_id || null, photo_url || null)
+      .run()
+    
+    return c.json({ success: true, message: 'تم إضافة المعلم بنجاح', teacherId: result.meta.last_row_id })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في إضافة المعلم' }, 500)
+  }
+})
+
+// Update teacher
+app.put('/api/admin/teachers/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const { full_name, subject, specialization, email, phone, gender, employee_id, photo_url } = await c.req.json()
+    const db = c.env.DB
+    
+    // Check if employee_id exists for another teacher
+    if (employee_id) {
+      const existing = await db
+        .prepare('SELECT id FROM teachers WHERE employee_id = ? AND id != ?')
+        .bind(employee_id, id)
+        .first()
+      
+      if (existing) {
+        return c.json({ success: false, message: 'الرقم الوظيفي موجود مسبقاً' }, 400)
+      }
+    }
+    
+    await db
+      .prepare(`
+        UPDATE teachers 
+        SET full_name = ?, subject = ?, specialization = ?, email = ?, phone = ?, 
+            gender = ?, employee_id = ?, photo_url = ?, updated_at = datetime('now')
+        WHERE id = ?
+      `)
+      .bind(full_name, subject, specialization || null, email || null, phone || null, gender, employee_id || null, photo_url || null, id)
+      .run()
+    
+    return c.json({ success: true, message: 'تم تحديث بيانات المعلم بنجاح' })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في تحديث بيانات المعلم' }, 500)
+  }
+})
+
+// Delete teacher
+app.delete('/api/admin/teachers/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const db = c.env.DB
+    
+    // Check if teacher has evaluations
+    const evaluations = await db
+      .prepare('SELECT COUNT(*) as count FROM evaluations WHERE teacher_id = ?')
+      .bind(id)
+      .first()
+    
+    if (evaluations && evaluations.count > 0) {
+      return c.json({ 
+        success: false, 
+        message: 'لا يمكن حذف المعلم لوجود تقييمات مرتبطة به' 
+      }, 400)
+    }
+    
+    // Delete teacher (will cascade delete teacher_classes)
+    await db
+      .prepare('DELETE FROM teachers WHERE id = ?')
+      .bind(id)
+      .run()
+    
+    return c.json({ success: true, message: 'تم حذف المعلم بنجاح' })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في حذف المعلم' }, 500)
+  }
+})
+
+// Assign teacher to class
+app.post('/api/admin/teachers/:id/classes', async (c) => {
+  try {
+    const teacherId = c.req.param('id')
+    const { grade_level, class_name, subject } = await c.req.json()
+    const db = c.env.DB
+    
+    // Check if assignment already exists
+    const existing = await db
+      .prepare('SELECT id FROM teacher_classes WHERE teacher_id = ? AND grade_level = ? AND class_name = ? AND subject = ?')
+      .bind(teacherId, grade_level, class_name, subject)
+      .first()
+    
+    if (existing) {
+      return c.json({ success: false, message: 'المعلم مُعيّن بالفعل لهذا الفصل والمادة' }, 400)
+    }
+    
+    await db
+      .prepare('INSERT INTO teacher_classes (teacher_id, grade_level, class_name, subject) VALUES (?, ?, ?, ?)')
+      .bind(teacherId, grade_level, class_name, subject)
+      .run()
+    
+    return c.json({ success: true, message: 'تم تعيين المعلم للفصل بنجاح' })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في تعيين المعلم' }, 500)
+  }
+})
+
+// Remove teacher from class
+app.delete('/api/admin/teachers/:teacherId/classes/:classId', async (c) => {
+  try {
+    const classId = c.req.param('classId')
+    const db = c.env.DB
+    
+    await db
+      .prepare('DELETE FROM teacher_classes WHERE id = ?')
+      .bind(classId)
+      .run()
+    
+    return c.json({ success: true, message: 'تم إلغاء تعيين المعلم من الفصل' })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في إلغاء التعيين' }, 500)
+  }
+})
+
+// ============================================
 // API Routes - Admin Reports
 // ============================================
 
@@ -709,9 +1060,18 @@ app.get('/api/admin/teacher-report/:teacherId', async (c) => {
     const teacherId = c.req.param('teacherId')
     const db = c.env.DB
 
-    // Get teacher info
+    // Get teacher info with total evaluations and average
     const teacher = await db
-      .prepare('SELECT * FROM teachers WHERE id = ?')
+      .prepare(`
+        SELECT 
+          t.*,
+          COUNT(DISTINCT e.id) as total_evaluations,
+          AVG(e.score) as average_score
+        FROM teachers t
+        LEFT JOIN evaluations e ON t.id = e.teacher_id AND e.academic_year = '2025'
+        WHERE t.id = ?
+        GROUP BY t.id
+      `)
       .bind(teacherId)
       .first()
 
@@ -719,33 +1079,36 @@ app.get('/api/admin/teacher-report/:teacherId', async (c) => {
       return c.json({ success: false, message: 'المعلم غير موجود' }, 404)
     }
 
-    // Get evaluation statistics
-    const stats = await db
+    // Get evaluation statistics by criteria
+    const criteria = await db
       .prepare(`
         SELECT 
-          ec.title as criteria_title,
+          ec.id,
+          ec.title,
           ec.max_score,
-          AVG(e.score) as avg_score,
+          AVG(e.score) as average_score,
           COUNT(e.id) as evaluation_count
-        FROM evaluations e
-        JOIN evaluation_criteria ec ON e.criteria_id = ec.id
-        WHERE e.teacher_id = ? AND e.academic_year = '2025'
-        GROUP BY e.criteria_id, ec.title, ec.max_score
+        FROM evaluation_criteria ec
+        LEFT JOIN evaluations e ON ec.id = e.criteria_id AND e.teacher_id = ? AND e.academic_year = '2025'
+        WHERE ec.is_active = 1
+        GROUP BY ec.id, ec.title, ec.max_score
         ORDER BY ec.display_order
       `)
       .bind(teacherId)
       .all()
 
     // Get class-wise statistics
-    const clasStats = await db
+    const classes = await db
       .prepare(`
         SELECT 
+          grade_level,
           class_name,
           COUNT(DISTINCT student_id) as student_count,
-          AVG(score) as avg_score
+          AVG(score) as average_score
         FROM evaluations
         WHERE teacher_id = ? AND academic_year = '2025'
-        GROUP BY class_name
+        GROUP BY grade_level, class_name
+        ORDER BY grade_level, class_name
       `)
       .bind(teacherId)
       .all()
@@ -753,11 +1116,86 @@ app.get('/api/admin/teacher-report/:teacherId', async (c) => {
     return c.json({
       success: true,
       teacher,
-      criteriaStats: stats.results,
-      classStats: clasStats.results
+      criteria: criteria.results,
+      classes: classes.results
     })
   } catch (error) {
     return c.json({ success: false, message: 'حدث خطأ في جلب تقرير المعلم' }, 500)
+  }
+})
+
+// Get all teachers with statistics (must be before /:id route)
+app.get('/api/admin/teachers-all', async (c) => {
+  try {
+    const db = c.env.DB
+    
+    const teachers = await db
+      .prepare(`
+        SELECT 
+          t.*,
+          COUNT(DISTINCT e.id) as total_evaluations,
+          AVG(e.score) as average_score
+        FROM teachers t
+        LEFT JOIN evaluations e ON t.id = e.teacher_id AND e.academic_year = '2025'
+        GROUP BY t.id
+        ORDER BY t.full_name
+      `)
+      .all()
+    
+    return c.json({ success: true, teachers: teachers.results })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في جلب بيانات المعلمين' }, 500)
+  }
+})
+
+// Get report by subject
+app.get('/api/admin/reports/by-subject', async (c) => {
+  try {
+    const db = c.env.DB
+    
+    const subjects = await db
+      .prepare(`
+        SELECT 
+          t.subject,
+          COUNT(DISTINCT t.id) as teacher_count,
+          COUNT(DISTINCT e.id) as evaluation_count,
+          AVG(e.score) as average_score
+        FROM teachers t
+        LEFT JOIN evaluations e ON t.id = e.teacher_id AND e.academic_year = '2025'
+        GROUP BY t.subject
+        ORDER BY average_score DESC
+      `)
+      .all()
+    
+    return c.json({ success: true, subjects: subjects.results })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في جلب تقرير المواد' }, 500)
+  }
+})
+
+// Get report by class
+app.get('/api/admin/reports/by-class', async (c) => {
+  try {
+    const db = c.env.DB
+    
+    const classes = await db
+      .prepare(`
+        SELECT 
+          e.grade_level,
+          e.class_name,
+          COUNT(DISTINCT e.student_id) as student_count,
+          COUNT(DISTINCT e.id) as evaluation_count,
+          AVG(e.score) as average_score
+        FROM evaluations e
+        WHERE e.academic_year = '2025'
+        GROUP BY e.grade_level, e.class_name
+        ORDER BY e.grade_level, e.class_name
+      `)
+      .all()
+    
+    return c.json({ success: true, classes: classes.results })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في جلب تقرير الفصول' }, 500)
   }
 })
 
@@ -867,6 +1305,10 @@ app.get('/', (c) => {
     
     <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="/static/js/pdf-export.js"></script>
     <script src="/static/js/app.js"></script>
 </body>
 </html>
