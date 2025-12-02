@@ -810,7 +810,7 @@ async function showAdminDashboard() {
             <p class="text-gray-600 mt-2 text-sm">رفع الطلاب والمعلمين بالجملة</p>
           </div>
 
-          <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="window.location.href='/api/settings'">
+          <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="showSettingsPage()">
             <div class="icon-3d inline-block mb-4">
               <i class="fas fa-cog text-gray-600" style="font-size: 3rem;"></i>
             </div>
@@ -1011,6 +1011,191 @@ async function uploadTeachersFile() {
     
     fileInput.value = '';
     document.getElementById('teachersFileName').textContent = '';
+  }
+}
+
+// ============================================
+// Settings Page
+// ============================================
+async function showSettingsPage() {
+  try {
+    console.log('Loading settings page...');
+    const response = await axios.get('/api/settings');
+    console.log('Settings API response:', response.data);
+    
+    if (!response.data.success) {
+      toast.error('فشل تحميل الإعدادات من الخادم');
+      return;
+    }
+    
+    const settings = response.data.settings || {};
+    console.log('Parsed settings:', settings);
+    
+    const app = document.getElementById('app');
+    app.innerHTML = `
+      <div class="max-w-4xl mx-auto fade-in">
+        <!-- Header -->
+        <div class="glass-card p-6 mb-8">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-3xl font-bold text-gray-800">إعدادات النظام</h2>
+              <p class="text-gray-600 text-lg mt-1">الإعدادات العامة للنظام</p>
+            </div>
+            <button onclick="showAdminDashboard()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold">
+              <i class="fas fa-arrow-right ml-2"></i>
+              رجوع
+            </button>
+          </div>
+        </div>
+
+        <!-- Settings Cards -->
+        <div class="space-y-6">
+          <!-- School Information -->
+          <div class="glass-card p-6">
+            <div class="flex items-center mb-4">
+              <div class="icon-3d">
+                <i class="fas fa-school text-blue-600" style="font-size: 2rem;"></i>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-800 mr-3">معلومات المدرسة</h3>
+            </div>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <p class="text-gray-600 text-sm">اسم المدرسة</p>
+                  <p class="text-gray-800 font-bold text-lg">${settings.school_name || 'غير محدد'}</p>
+                </div>
+                <i class="fas fa-building text-gray-400 text-2xl"></i>
+              </div>
+              
+              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <p class="text-gray-600 text-sm">العام الدراسي</p>
+                  <p class="text-gray-800 font-bold text-lg">${settings.academic_year || '2025'}</p>
+                </div>
+                <i class="fas fa-calendar text-gray-400 text-2xl"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- System Settings -->
+          <div class="glass-card p-6">
+            <div class="flex items-center mb-4">
+              <div class="icon-3d">
+                <i class="fas fa-cog text-purple-600" style="font-size: 2rem;"></i>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-800 mr-3">إعدادات النظام</h3>
+            </div>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <p class="text-gray-600 text-sm">حالة التقييم</p>
+                  <p class="text-gray-800 font-bold text-lg">
+                    ${settings.evaluation_enabled === 'true' ? 
+                      '<span class="text-green-600"><i class="fas fa-check-circle ml-1"></i>مفعّل</span>' : 
+                      '<span class="text-red-600"><i class="fas fa-times-circle ml-1"></i>معطّل</span>'
+                    }
+                  </p>
+                </div>
+                <i class="fas fa-toggle-${settings.evaluation_enabled === 'true' ? 'on text-green-600' : 'off text-gray-400'} text-3xl"></i>
+              </div>
+              
+              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <p class="text-gray-600 text-sm">الحد الأدنى للتقييمات</p>
+                  <p class="text-gray-800 font-bold text-lg">${settings.min_evaluations || '5'} تقييمات</p>
+                </div>
+                <i class="fas fa-chart-line text-gray-400 text-2xl"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Database Information -->
+          <div class="glass-card p-6">
+            <div class="flex items-center mb-4">
+              <div class="icon-3d">
+                <i class="fas fa-database text-green-600" style="font-size: 2rem;"></i>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-800 mr-3">معلومات قاعدة البيانات</h3>
+            </div>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <p class="text-gray-600 text-sm">نوع قاعدة البيانات</p>
+                  <p class="text-gray-800 font-bold text-lg">Cloudflare D1 SQLite</p>
+                </div>
+                <i class="fas fa-server text-gray-400 text-2xl"></i>
+              </div>
+              
+              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <p class="text-gray-600 text-sm">اسم قاعدة البيانات</p>
+                  <p class="text-gray-800 font-bold text-lg">webapp-production</p>
+                </div>
+                <i class="fas fa-table text-gray-400 text-2xl"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- System Information -->
+          <div class="glass-card p-6">
+            <div class="flex items-center mb-4">
+              <div class="icon-3d">
+                <i class="fas fa-info-circle text-orange-600" style="font-size: 2rem;"></i>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-800 mr-3">معلومات النظام</h3>
+            </div>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <p class="text-gray-600 text-sm">نسخة النظام</p>
+                  <p class="text-gray-800 font-bold text-lg">معلمي 2025 v4.1</p>
+                </div>
+                <i class="fas fa-tag text-gray-400 text-2xl"></i>
+              </div>
+              
+              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <p class="text-gray-600 text-sm">المنصة</p>
+                  <p class="text-gray-800 font-bold text-lg">Cloudflare Pages</p>
+                </div>
+                <i class="fab fa-cloudflare text-gray-400 text-2xl"></i>
+              </div>
+
+              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <p class="text-gray-600 text-sm">إطار العمل</p>
+                  <p class="text-gray-800 font-bold text-lg">Hono + TypeScript</p>
+                </div>
+                <i class="fas fa-code text-gray-400 text-2xl"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Note -->
+          <div class="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
+            <div class="flex items-start">
+              <i class="fas fa-exclamation-triangle text-yellow-600 text-2xl mt-1"></i>
+              <div class="mr-3">
+                <h4 class="text-yellow-800 font-bold mb-1">ملاحظة</h4>
+                <p class="text-yellow-700 text-sm">
+                  لتعديل الإعدادات، يرجى تحديث قاعدة البيانات مباشرة أو التواصل مع المطور.
+                  الإعدادات الحالية هي للعرض فقط.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  } catch (error) {
+    console.error('Error loading settings:', error);
+    if (error.response) {
+      toast.error(`خطأ في تحميل الإعدادات: ${error.response.status}`);
+    } else if (error.request) {
+      toast.error('خطأ في الاتصال بالخادم');
+    } else {
+      toast.error('حدث خطأ غير متوقع');
+    }
   }
 }
 
