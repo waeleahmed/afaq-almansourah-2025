@@ -582,8 +582,8 @@ async function showTeacherSelection() {
             <div class="icon-3d inline-block mb-4">
               <i class="fas fa-users-cog text-white" style="font-size: 4rem;"></i>
             </div>
-            <h2 class="text-4xl font-bold text-white mb-2">اختر المعلم للتقييم</h2>
-            <p class="text-white text-xl opacity-90">قيّم معلميك بموضوعية ومصداقية</p>
+            <h2 class="text-4xl font-bold text-white mb-3">اختر معلمك لمناقشة الممارسات التعليمية للمعلم ودعم تطويرها</h2>
+            <p class="text-white text-2xl opacity-90 font-semibold">أعطنا رأيك بموضوعية ومصداقية</p>
           </div>
 
           <!-- Teachers Grid -->
