@@ -1316,6 +1316,23 @@ app.post('/api/admin/teachers/bulk-upload', async (c) => {
   }
 })
 
+// Get teacher classes
+app.get('/api/admin/teachers/:id/classes', async (c) => {
+  try {
+    const teacherId = c.req.param('id')
+    const db = c.env.DB
+    
+    const result = await db
+      .prepare('SELECT * FROM teacher_classes WHERE teacher_id = ?')
+      .bind(teacherId)
+      .all()
+    
+    return c.json({ success: true, classes: result.results || [] })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في جلب الفصول' }, 500)
+  }
+})
+
 // Assign teacher to class
 app.post('/api/admin/teachers/:id/classes', async (c) => {
   try {
