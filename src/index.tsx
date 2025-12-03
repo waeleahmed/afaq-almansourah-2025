@@ -1851,9 +1851,9 @@ app.get('/', (c) => {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-    <script src="/static/js/pdf-export.js"></script>
-    <script src="/static/js/excel-handler.js"></script>
-    <script src="/static/js/app.js"></script>
+    <script src="/static/js/pdf-export.js?v=6.0"></script>
+    <script src="/static/js/excel-handler.js?v=6.0"></script>
+    <script src="/static/js/app.js?v=6.0"></script>
 </body>
 </html>
   `)
