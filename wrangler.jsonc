@@ -1,7 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "webapp",
-  "main": "src/index.tsx",
+  "name": "afaq-almansourah",
   "compatibility_date": "2025-12-02",
   "pages_build_output_dir": "./dist",
   "compatibility_flags": [
@@ -10,8 +9,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "webapp-production",
-      "database_id": ""
+      "database_name": "afaq-almansourah-db",
+      "database_id": "2be0b913-b43a-49e9-9695-351edbf6f553"
     }
   ]
 }

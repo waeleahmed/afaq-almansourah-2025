@@ -1510,6 +1510,194 @@ app.get('/api/admin/reports/by-class', async (c) => {
   }
 })
 
+// ============================================
+// Teacher Strength & Weakness Analysis APIs
+// ============================================
+
+// Get teacher strengths and weaknesses by filter
+app.get('/api/admin/teachers/:id/analysis', async (c) => {
+  try {
+    const teacherId = c.req.param('id')
+    const filterType = c.req.query('filter_type') // 'class', 'grade', or 'school'
+    const gradeLevel = c.req.query('grade_level')
+    const className = c.req.query('class_name')
+    const db = c.env.DB
+    
+    // Base query for criteria analysis
+    let query = `
+      SELECT 
+        ec.id as criteria_id,
+        ec.title as criteria_title,
+        ec.max_score,
+        COUNT(e.id) as evaluation_count,
+        AVG(e.score) as average_score,
+        MIN(e.score) as min_score,
+        MAX(e.score) as max_score,
+        (AVG(e.score) / ec.max_score * 100) as percentage
+      FROM evaluation_criteria ec
+      LEFT JOIN evaluations e ON ec.id = e.criteria_id AND e.teacher_id = ? AND e.academic_year = '2025'
+    `
+    
+    const bindings: any[] = [teacherId]
+    
+    // Add filter conditions
+    if (filterType === 'class' && gradeLevel && className) {
+      query += ` AND e.grade_level = ? AND e.class_name = ?`
+      bindings.push(gradeLevel, className)
+    } else if (filterType === 'grade' && gradeLevel) {
+      query += ` AND e.grade_level = ?`
+      bindings.push(gradeLevel)
+    }
+    // 'school' means no additional filters
+    
+    query += `
+      WHERE ec.is_active = 1
+      GROUP BY ec.id, ec.title, ec.max_score
+      HAVING evaluation_count > 0
+      ORDER BY percentage DESC
+    `
+    
+    const stmt = db.prepare(query)
+    for (let i = 0; i < bindings.length; i++) {
+      stmt.bind(bindings[i])
+    }
+    
+    const criteria = await stmt.all()
+    
+    // Calculate strengths (top 3) and weaknesses (bottom 3)
+    const results = criteria.results as any[]
+    const strengths = results.slice(0, 3)
+    const weaknesses = results.slice(-3).reverse()
+    
+    // Get filter info
+    let filterInfo = { type: filterType || 'school' }
+    if (filterType === 'class') {
+      filterInfo = { ...filterInfo, grade_level: gradeLevel, class_name: className }
+    } else if (filterType === 'grade') {
+      filterInfo = { ...filterInfo, grade_level: gradeLevel }
+    }
+    
+    return c.json({
+      success: true,
+      filter: filterInfo,
+      strengths,
+      weaknesses,
+      all_criteria: results
+    })
+  } catch (error) {
+    console.error('Error analyzing teacher:', error)
+    return c.json({ success: false, message: 'حدث خطأ في تحليل المعلم' }, 500)
+  }
+})
+
+// ============================================
+// Custom Criteria APIs
+// ============================================
+
+// Get teacher custom criteria
+app.get('/api/admin/teachers/:id/custom-criteria', async (c) => {
+  try {
+    const teacherId = c.req.param('id')
+    const db = c.env.DB
+    
+    const criteria = await db
+      .prepare(`
+        SELECT 
+          ec.id,
+          ec.title,
+          ec.description,
+          ec.max_score,
+          ec.display_order,
+          ec.is_active,
+          tc.teacher_id
+        FROM evaluation_criteria ec
+        LEFT JOIN teacher_custom_criteria tc ON ec.id = tc.criteria_id AND tc.teacher_id = ?
+        WHERE ec.is_active = 1
+        ORDER BY ec.display_order
+      `)
+      .bind(teacherId)
+      .all()
+    
+    return c.json({ success: true, criteria: criteria.results })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في جلب المعايير المخصصة' }, 500)
+  }
+})
+
+// Add custom criteria to teacher
+app.post('/api/admin/teachers/:id/custom-criteria', async (c) => {
+  try {
+    const teacherId = c.req.param('id')
+    const { criteria_ids } = await c.req.json()
+    const db = c.env.DB
+    
+    // Delete existing custom criteria
+    await db
+      .prepare('DELETE FROM teacher_custom_criteria WHERE teacher_id = ?')
+      .bind(teacherId)
+      .run()
+    
+    // Add new custom criteria
+    for (const criteriaId of criteria_ids) {
+      await db
+        .prepare('INSERT INTO teacher_custom_criteria (teacher_id, criteria_id) VALUES (?, ?)')
+        .bind(teacherId, criteriaId)
+        .run()
+    }
+    
+    return c.json({ success: true, message: 'تم تحديث المعايير المخصصة بنجاح' })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في تحديث المعايير المخصصة' }, 500)
+  }
+})
+
+// Get criteria for evaluation (general + custom for teacher)
+app.get('/api/evaluation/criteria/:teacherId', async (c) => {
+  try {
+    const teacherId = c.req.param('teacherId')
+    const db = c.env.DB
+    
+    // Check if teacher has custom criteria
+    const customCriteria = await db
+      .prepare(`
+        SELECT COUNT(*) as count
+        FROM teacher_custom_criteria
+        WHERE teacher_id = ?
+      `)
+      .bind(teacherId)
+      .first()
+    
+    let criteria
+    
+    if (customCriteria && (customCriteria as any).count > 0) {
+      // Get custom criteria for this teacher
+      criteria = await db
+        .prepare(`
+          SELECT ec.*
+          FROM evaluation_criteria ec
+          JOIN teacher_custom_criteria tc ON ec.id = tc.criteria_id
+          WHERE tc.teacher_id = ? AND ec.is_active = 1
+          ORDER BY ec.display_order
+        `)
+        .bind(teacherId)
+        .all()
+    } else {
+      // Get general criteria
+      criteria = await db
+        .prepare(`
+          SELECT * FROM evaluation_criteria
+          WHERE is_active = 1
+          ORDER BY display_order
+        `)
+        .all()
+    }
+    
+    return c.json({ success: true, criteria: criteria.results })
+  } catch (error) {
+    return c.json({ success: false, message: 'حدث خطأ في جلب معايير التقييم' }, 500)
+  }
+})
+
 // Get settings
 app.get('/api/settings', async (c) => {
   try {

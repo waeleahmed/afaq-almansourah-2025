@@ -626,8 +626,15 @@ async function checkEvaluationStatus(teacherId, teacherName, subject) {
     if (response.data.completed) {
       alert('لقد قمت بتقييم هذا المعلم مسبقاً. شكراً لمشاركتك!');
     } else {
-      currentTeacher = { id: teacherId, name: teacherName, subject: subject };
-      showEvaluationForm();
+      // Load criteria specific to this teacher (custom or general)
+      const criteriaResponse = await axios.get(`/api/evaluation/criteria/${teacherId}`);
+      if (criteriaResponse.data.success) {
+        evaluationCriteria = criteriaResponse.data.criteria;
+        currentTeacher = { id: teacherId, name: teacherName, subject: subject };
+        showEvaluationForm();
+      } else {
+        alert('حدث خطأ في تحميل معايير التقييم');
+      }
     }
   } catch (error) {
     console.error('Error checking evaluation status:', error);
@@ -2038,6 +2045,10 @@ async function showTeacherReport(teacherId) {
               </p>
             </div>
             <div class="flex gap-4">
+              <button onclick="showTeacherAnalysis(${teacherId}, '${teacher.full_name.replace(/'/g, "\\'")}' )" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-semibold">
+                <i class="fas fa-chart-line ml-2"></i>
+                تحليل نقاط القوة والضعف
+              </button>
               <button onclick="exportTeacherReportPDF(${teacherId}, '${teacher.full_name.replace(/'/g, "\\'")}', '${teacher.subject}')" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold">
                 <i class="fas fa-file-pdf ml-2"></i>
                 تصدير PDF
@@ -2194,6 +2205,236 @@ async function showTeacherReport(teacherId) {
     });
   } catch (error) {
     console.error('Error loading teacher report:', error);
+  }
+}
+
+// ============================================
+// Teacher Strength & Weakness Analysis
+// ============================================
+async function showTeacherAnalysis(teacherId, teacherName) {
+  try {
+    // Get teacher classes for filter options
+    const classesResponse = await axios.get(`/api/admin/teachers/${teacherId}/classes`);
+    const teacherClasses = classesResponse.data.classes || [];
+    
+    // Get unique grades
+    const grades = [...new Set(teacherClasses.map(c => c.grade_level))];
+    
+    const app = document.getElementById('app');
+    app.innerHTML = `
+      <div class="max-w-6xl mx-auto fade-in">
+        <!-- Header -->
+        <div class="glass-card p-6 mb-8">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-3xl font-bold text-gray-800">
+                <i class="fas fa-chart-line ml-2 text-purple-600"></i>
+                تحليل نقاط القوة والضعف
+              </h2>
+              <p class="text-gray-600 text-lg mt-1">${teacherName}</p>
+            </div>
+            <button onclick="showTeacherReport(${teacherId})" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold">
+              <i class="fas fa-arrow-right ml-2"></i>
+              رجوع
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Options -->
+        <div class="glass-card p-6 mb-8">
+          <h3 class="text-xl font-bold text-gray-800 mb-4">
+            <i class="fas fa-filter ml-2 text-blue-600"></i>
+            خيارات التصفية
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-gray-700 font-semibold mb-2">نوع التقرير</label>
+              <select id="filterType" class="w-full px-4 py-2 border border-gray-300 rounded-lg" onchange="updateAnalysisFilters()">
+                <option value="school">المدرسة كاملة</option>
+                <option value="grade">صف كامل</option>
+                <option value="class">فصل محدد</option>
+              </select>
+            </div>
+            <div id="gradeFilter" class="hidden">
+              <label class="block text-gray-700 font-semibold mb-2">الصف</label>
+              <select id="gradeLevel" class="w-full px-4 py-2 border border-gray-300 rounded-lg" onchange="updateClassOptions()">
+                <option value="">اختر الصف</option>
+                ${grades.map(grade => `<option value="${grade}">${grade}</option>`).join('')}
+              </select>
+            </div>
+            <div id="classFilter" class="hidden">
+              <label class="block text-gray-700 font-semibold mb-2">الفصل</label>
+              <select id="className" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                <option value="">اختر الفصل</option>
+              </select>
+            </div>
+          </div>
+          <button onclick="loadAnalysisData(${teacherId})" class="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-semibold w-full md:w-auto">
+            <i class="fas fa-sync-alt ml-2"></i>
+            تحديث التحليل
+          </button>
+        </div>
+
+        <!-- Analysis Results -->
+        <div id="analysisResults"></div>
+      </div>
+    `;
+
+    // Store teacher classes globally for filter updates
+    window.teacherClassesData = teacherClasses;
+    
+    // Load initial analysis (school-wide)
+    await loadAnalysisData(teacherId);
+  } catch (error) {
+    console.error('Error showing teacher analysis:', error);
+    alert('حدث خطأ في عرض التحليل');
+  }
+}
+
+function updateAnalysisFilters() {
+  const filterType = document.getElementById('filterType').value;
+  const gradeFilter = document.getElementById('gradeFilter');
+  const classFilter = document.getElementById('classFilter');
+  
+  if (filterType === 'school') {
+    gradeFilter.classList.add('hidden');
+    classFilter.classList.add('hidden');
+  } else if (filterType === 'grade') {
+    gradeFilter.classList.remove('hidden');
+    classFilter.classList.add('hidden');
+  } else if (filterType === 'class') {
+    gradeFilter.classList.remove('hidden');
+    classFilter.classList.remove('hidden');
+  }
+}
+
+function updateClassOptions() {
+  const gradeLevel = document.getElementById('gradeLevel').value;
+  const className = document.getElementById('className');
+  
+  if (!gradeLevel || !window.teacherClassesData) {
+    className.innerHTML = '<option value="">اختر الفصل</option>';
+    return;
+  }
+  
+  const classes = window.teacherClassesData.filter(c => c.grade_level === gradeLevel);
+  className.innerHTML = '<option value="">اختر الفصل</option>' + 
+    classes.map(c => `<option value="${c.class_name}">${c.class_name}</option>`).join('');
+}
+
+async function loadAnalysisData(teacherId) {
+  try {
+    const filterType = document.getElementById('filterType').value;
+    const gradeLevel = document.getElementById('gradeLevel')?.value || '';
+    const className = document.getElementById('className')?.value || '';
+    
+    // Build query params
+    let url = `/api/admin/teachers/${teacherId}/analysis?filter_type=${filterType}`;
+    if (filterType === 'grade' && gradeLevel) {
+      url += `&grade_level=${gradeLevel}`;
+    } else if (filterType === 'class' && gradeLevel && className) {
+      url += `&grade_level=${gradeLevel}&class_name=${className}`;
+    }
+    
+    const response = await axios.get(url);
+    const { strengths, weaknesses, filter } = response.data;
+    
+    // Display filter info
+    let filterText = 'المدرسة كاملة';
+    if (filter.type === 'grade') {
+      filterText = `الصف: ${filter.grade_level}`;
+    } else if (filter.type === 'class') {
+      filterText = `الفصل: ${filter.grade_level} - ${filter.class_name}`;
+    }
+    
+    const resultsDiv = document.getElementById('analysisResults');
+    resultsDiv.innerHTML = `
+      <!-- Filter Info -->
+      <div class="glass-card p-4 mb-6 bg-blue-50">
+        <p class="text-center text-lg font-semibold text-blue-800">
+          <i class="fas fa-info-circle ml-2"></i>
+          نطاق التحليل: ${filterText}
+        </p>
+      </div>
+
+      <!-- Strengths -->
+      <div class="glass-card p-6 mb-8">
+        <h3 class="text-2xl font-bold text-green-700 mb-4">
+          <i class="fas fa-thumbs-up ml-2"></i>
+          نقاط القوة (أعلى 3 معايير)
+        </h3>
+        ${strengths.length > 0 ? `
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            ${strengths.map((item, index) => {
+              const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
+              return `
+                <div class="bg-green-50 p-6 rounded-lg border-2 border-green-200">
+                  <div class="text-4xl text-center mb-3">${medal}</div>
+                  <h4 class="text-lg font-bold text-green-800 text-center mb-3">${item.criteria_title}</h4>
+                  <div class="text-center">
+                    <div class="text-3xl font-bold text-green-600 mb-2">
+                      ${parseFloat(item.percentage).toFixed(1)}%
+                    </div>
+                    <p class="text-gray-600 text-sm">
+                      ${parseFloat(item.average_score).toFixed(2)}/${item.max_score}
+                    </p>
+                    <p class="text-gray-500 text-xs mt-2">
+                      ${item.evaluation_count} تقييم
+                    </p>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-3 mt-4">
+                    <div class="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full" style="width: ${item.percentage}%"></div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : '<p class="text-center text-gray-500 py-8">لا توجد بيانات كافية</p>'}
+      </div>
+
+      <!-- Weaknesses -->
+      <div class="glass-card p-6">
+        <h3 class="text-2xl font-bold text-red-700 mb-4">
+          <i class="fas fa-exclamation-triangle ml-2"></i>
+          نقاط الضعف (أقل 3 معايير)
+        </h3>
+        ${weaknesses.length > 0 ? `
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            ${weaknesses.map((item, index) => {
+              const icon = index === 0 ? '⚠️' : index === 1 ? '❗' : '❕';
+              return `
+                <div class="bg-red-50 p-6 rounded-lg border-2 border-red-200">
+                  <div class="text-4xl text-center mb-3">${icon}</div>
+                  <h4 class="text-lg font-bold text-red-800 text-center mb-3">${item.criteria_title}</h4>
+                  <div class="text-center">
+                    <div class="text-3xl font-bold text-red-600 mb-2">
+                      ${parseFloat(item.percentage).toFixed(1)}%
+                    </div>
+                    <p class="text-gray-600 text-sm">
+                      ${parseFloat(item.average_score).toFixed(2)}/${item.max_score}
+                    </p>
+                    <p class="text-gray-500 text-xs mt-2">
+                      ${item.evaluation_count} تقييم
+                    </p>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-3 mt-4">
+                    <div class="bg-gradient-to-r from-red-400 to-red-600 h-3 rounded-full" style="width: ${item.percentage}%"></div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : '<p class="text-center text-gray-500 py-8">لا توجد بيانات كافية</p>'}
+      </div>
+    `;
+  } catch (error) {
+    console.error('Error loading analysis data:', error);
+    document.getElementById('analysisResults').innerHTML = `
+      <div class="glass-card p-6 text-center text-red-600">
+        <i class="fas fa-exclamation-circle text-4xl mb-4"></i>
+        <p>حدث خطأ في تحميل البيانات</p>
+      </div>
+    `;
   }
 }
 
@@ -2651,6 +2892,13 @@ async function showTeachersManagementFull() {
                           <i class="fas fa-school"></i>
                         </button>
                         <button 
+                          onclick="manageTeacherCriteria(${teacher.id}, '${teacher.full_name}')" 
+                          class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm"
+                          title="معايير مخصصة"
+                        >
+                          <i class="fas fa-star"></i>
+                        </button>
+                        <button 
                           onclick="deleteTeacher(${teacher.id}, '${teacher.full_name}')" 
                           class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
                           title="حذف"
@@ -3013,6 +3261,107 @@ async function removeTeacherClass(teacherId, classId, teacherName) {
     }
   } catch (error) {
     alert('حدث خطأ في إلغاء التعيين');
+  }
+}
+
+// ============================================
+// Teacher Custom Criteria Management
+// ============================================
+async function manageTeacherCriteria(teacherId, teacherName) {
+  try {
+    // Get all criteria and check which are assigned to teacher
+    const [allCriteriaRes, customCriteriaRes] = await Promise.all([
+      axios.get('/api/admin/criteria'),
+      axios.get(`/api/admin/teachers/${teacherId}/custom-criteria`)
+    ]);
+    
+    const allCriteria = allCriteriaRes.data.criteria || [];
+    const customCriteria = customCriteriaRes.data.criteria || [];
+    
+    // Get IDs of custom criteria assigned to this teacher
+    const assignedIds = customCriteria
+      .filter(c => c.teacher_id !== null)
+      .map(c => c.id);
+    
+    const modal = document.getElementById('modalContainer');
+    modal.innerHTML = `
+      <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeModal(event)">
+        <div class="glass-card p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+          <h3 class="text-2xl font-bold text-gray-800 mb-2">
+            <i class="fas fa-star ml-2 text-indigo-600"></i>
+            معايير التقييم المخصصة
+          </h3>
+          <p class="text-gray-600 mb-2">${teacherName}</p>
+          <div class="bg-blue-50 p-4 rounded-lg mb-6">
+            <p class="text-sm text-blue-800">
+              <i class="fas fa-info-circle ml-2"></i>
+              <strong>ملاحظة:</strong> إذا لم تختر أي معايير، سيتم استخدام المعايير العامة لجميع المعلمين.
+              اختر المعايير المخصصة التي تريد أن يُقيّم بها هذا المعلم فقط.
+            </p>
+          </div>
+          
+          <form id="customCriteriaForm">
+            <div class="space-y-3 mb-6">
+              ${allCriteria.map(criteria => `
+                <label class="flex items-start gap-3 p-4 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer border-2 ${assignedIds.includes(criteria.id) ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'}">
+                  <input 
+                    type="checkbox" 
+                    name="criteria" 
+                    value="${criteria.id}"
+                    ${assignedIds.includes(criteria.id) ? 'checked' : ''}
+                    class="mt-1 w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
+                  >
+                  <div class="flex-1">
+                    <div class="font-bold text-gray-800">${criteria.title}</div>
+                    ${criteria.description ? `<div class="text-sm text-gray-600 mt-1">${criteria.description}</div>` : ''}
+                    <div class="text-xs text-gray-500 mt-1">الدرجة القصوى: ${criteria.max_score}</div>
+                  </div>
+                </label>
+              `).join('')}
+            </div>
+            
+            <div class="flex gap-4">
+              <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-bold">
+                <i class="fas fa-save ml-2"></i>
+                حفظ المعايير المخصصة
+              </button>
+              <button type="button" onclick="closeModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-lg font-bold">
+                إلغاء
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+    
+    document.getElementById('customCriteriaForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const checkboxes = document.querySelectorAll('input[name="criteria"]:checked');
+      const criteriaIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+      
+      try {
+        const response = await axios.post(`/api/admin/teachers/${teacherId}/custom-criteria`, {
+          criteria_ids: criteriaIds
+        });
+        
+        if (response.data.success) {
+          alert(criteriaIds.length > 0 
+            ? `تم تعيين ${criteriaIds.length} معيار/معايير مخصصة للمعلم!`
+            : 'تم إلغاء المعايير المخصصة، سيتم استخدام المعايير العامة.');
+          closeModal();
+          showTeachersManagement();
+        } else {
+          alert(response.data.message);
+        }
+      } catch (error) {
+        console.error('Error saving custom criteria:', error);
+        alert('حدث خطأ في حفظ المعايير المخصصة');
+      }
+    });
+  } catch (error) {
+    console.error('Error loading teacher criteria:', error);
+    alert('حدث خطأ في تحميل المعايير');
   }
 }
 
