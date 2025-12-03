@@ -3271,7 +3271,7 @@ async function manageTeacherCriteria(teacherId, teacherName) {
   try {
     // Get all criteria and check which are assigned to teacher
     const [allCriteriaRes, customCriteriaRes] = await Promise.all([
-      axios.get('/api/admin/criteria'),
+      axios.get('/api/criteria'),
       axios.get(`/api/admin/teachers/${teacherId}/custom-criteria`)
     ]);
     

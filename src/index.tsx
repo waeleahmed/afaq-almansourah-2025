@@ -1557,12 +1557,16 @@ app.get('/api/admin/teachers/:id/analysis', async (c) => {
       ORDER BY percentage DESC
     `
     
-    const stmt = db.prepare(query)
-    for (let i = 0; i < bindings.length; i++) {
-      stmt.bind(bindings[i])
+    let criteria
+    if (bindings.length === 1) {
+      criteria = await db.prepare(query).bind(bindings[0]).all()
+    } else if (bindings.length === 2) {
+      criteria = await db.prepare(query).bind(bindings[0], bindings[1]).all()
+    } else if (bindings.length === 3) {
+      criteria = await db.prepare(query).bind(bindings[0], bindings[1], bindings[2]).all()
+    } else {
+      criteria = await db.prepare(query).all()
     }
-    
-    const criteria = await stmt.all()
     
     // Calculate strengths (top 3) and weaknesses (bottom 3)
     const results = criteria.results as any[]
