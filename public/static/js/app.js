@@ -148,10 +148,14 @@ function checkAuth() {
   const user = localStorage.getItem('currentUser');
   if (user) {
     currentUser = JSON.parse(user);
-    if (currentUser.user_type === 'admin') {
+    // Check if user is any type of admin
+    if (['admin', 'principal', 'supervisor', 'manager'].includes(currentUser.user_type)) {
       showAdminDashboard();
-    } else {
+    } else if (currentUser.user_type === 'student') {
       showTeacherSelection();
+    } else {
+      // Unknown user type - logout
+      logout();
     }
   } else {
     showLoginPage();
@@ -391,17 +395,25 @@ function showWelcomeMessage() {
         <div class="text-xl text-gray-600">
           ${currentUser.user_type === 'student' 
             ? `<p class="mb-2"><i class="fas fa-graduation-cap ml-2"></i>${currentUser.grade_level} - ${currentUser.class_name}</p>` 
-            : '<p class="mb-2"><i class="fas fa-user-shield ml-2"></i>مدير النظام</p>'}
+            : currentUser.user_type === 'admin' 
+            ? '<p class="mb-2"><i class="fas fa-crown ml-2"></i>مدير النظام الرئيسي</p>' 
+            : currentUser.user_type === 'principal' 
+            ? '<p class="mb-2"><i class="fas fa-user-tie ml-2"></i>مدير المدرسة</p>' 
+            : currentUser.user_type === 'supervisor' 
+            ? '<p class="mb-2"><i class="fas fa-user-check ml-2"></i>مشرف</p>' 
+            : '<p class="mb-2"><i class="fas fa-user-cog ml-2"></i>مدير إداري</p>'}
         </div>
       </div>
     </div>
   `;
 
   setTimeout(() => {
-    if (currentUser.user_type === 'admin') {
+    if (['admin', 'principal', 'supervisor', 'manager'].includes(currentUser.user_type)) {
       showAdminDashboard();
-    } else {
+    } else if (currentUser.user_type === 'student') {
       showTeacherSelection();
+    } else {
+      logout();
     }
   }, 2000);
 }
