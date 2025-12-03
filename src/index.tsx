@@ -2334,4 +2334,243 @@ app.delete('/api/admin/users/admins/:id', async (c) => {
   }
 })
 
+// ============================================
+// PERMISSIONS MANAGEMENT APIs
+// ============================================
+
+// Get all permissions
+app.get('/api/admin/permissions', async (c) => {
+  try {
+    const db = c.env.DB
+    
+    const result = await db
+      .prepare(`
+        SELECT * FROM permissions 
+        ORDER BY category, display_order, permission_name_ar
+      `)
+      .all()
+    
+    return c.json({ success: true, permissions: result.results })
+  } catch (error) {
+    console.error('Error fetching permissions:', error)
+    return c.json({ success: false, message: 'خطأ في جلب الصلاحيات' }, 500)
+  }
+})
+
+// Get user permissions
+app.get('/api/admin/users/:id/permissions', async (c) => {
+  try {
+    const userId = c.req.param('id')
+    const db = c.env.DB
+    
+    const result = await db
+      .prepare(`
+        SELECT p.*, up.granted_at, up.granted_by,
+               u.full_name as granted_by_name
+        FROM user_permissions up
+        JOIN permissions p ON up.permission_key = p.permission_key
+        LEFT JOIN users u ON up.granted_by = u.id
+        WHERE up.user_id = ?
+        ORDER BY p.category, p.permission_name_ar
+      `)
+      .bind(userId)
+      .all()
+    
+    return c.json({ success: true, permissions: result.results })
+  } catch (error) {
+    console.error('Error fetching user permissions:', error)
+    return c.json({ success: false, message: 'خطأ في جلب صلاحيات المستخدم' }, 500)
+  }
+})
+
+// Grant permission to user
+app.post('/api/admin/users/:id/permissions', async (c) => {
+  try {
+    const userId = c.req.param('id')
+    const { permission_key, granted_by } = await c.req.json()
+    const db = c.env.DB
+    
+    // Check if permission exists
+    const permCheck = await db
+      .prepare('SELECT id FROM permissions WHERE permission_key = ?')
+      .bind(permission_key)
+      .first()
+    
+    if (!permCheck) {
+      return c.json({ success: false, message: 'الصلاحية غير موجودة' }, 404)
+    }
+    
+    // Grant permission
+    await db
+      .prepare(`
+        INSERT OR IGNORE INTO user_permissions (user_id, permission_key, granted_by)
+        VALUES (?, ?, ?)
+      `)
+      .bind(userId, permission_key, granted_by)
+      .run()
+    
+    return c.json({ 
+      success: true, 
+      message: 'تم منح الصلاحية بنجاح' 
+    })
+  } catch (error) {
+    console.error('Error granting permission:', error)
+    return c.json({ success: false, message: 'خطأ في منح الصلاحية' }, 500)
+  }
+})
+
+// Revoke permission from user
+app.delete('/api/admin/users/:id/permissions/:key', async (c) => {
+  try {
+    const userId = c.req.param('id')
+    const permissionKey = c.req.param('key')
+    const db = c.env.DB
+    
+    await db
+      .prepare('DELETE FROM user_permissions WHERE user_id = ? AND permission_key = ?')
+      .bind(userId, permissionKey)
+      .run()
+    
+    return c.json({ 
+      success: true, 
+      message: 'تم إلغاء الصلاحية بنجاح' 
+    })
+  } catch (error) {
+    console.error('Error revoking permission:', error)
+    return c.json({ success: false, message: 'خطأ في إلغاء الصلاحية' }, 500)
+  }
+})
+
+// Batch update user permissions
+app.put('/api/admin/users/:id/permissions', async (c) => {
+  try {
+    const userId = c.req.param('id')
+    const { permissions, granted_by } = await c.req.json()
+    const db = c.env.DB
+    
+    // Delete all existing permissions
+    await db
+      .prepare('DELETE FROM user_permissions WHERE user_id = ?')
+      .bind(userId)
+      .run()
+    
+    // Insert new permissions
+    if (permissions && permissions.length > 0) {
+      const insertStmt = db.prepare(`
+        INSERT INTO user_permissions (user_id, permission_key, granted_by)
+        VALUES (?, ?, ?)
+      `)
+      
+      const batch = permissions.map((perm: string) => 
+        insertStmt.bind(userId, perm, granted_by)
+      )
+      
+      await db.batch(batch)
+    }
+    
+    return c.json({ 
+      success: true, 
+      message: 'تم تحديث الصلاحيات بنجاح' 
+    })
+  } catch (error) {
+    console.error('Error updating permissions:', error)
+    return c.json({ success: false, message: 'خطأ في تحديث الصلاحيات' }, 500)
+  }
+})
+
+// Check if user has specific permission
+app.get('/api/admin/users/:id/permissions/check/:key', async (c) => {
+  try {
+    const userId = c.req.param('id')
+    const permissionKey = c.req.param('key')
+    const db = c.env.DB
+    
+    // Check if user is main admin (id = 1) - has all permissions
+    if (userId === '1') {
+      return c.json({ success: true, has_permission: true })
+    }
+    
+    const result = await db
+      .prepare('SELECT id FROM user_permissions WHERE user_id = ? AND permission_key = ?')
+      .bind(userId, permissionKey)
+      .first()
+    
+    return c.json({ 
+      success: true, 
+      has_permission: !!result 
+    })
+  } catch (error) {
+    console.error('Error checking permission:', error)
+    return c.json({ success: false, message: 'خطأ في التحقق من الصلاحية' }, 500)
+  }
+})
+
+// ============================================
+// BACKUP & RESTORE APIs
+// ============================================
+
+// Get all database data as JSON backup
+app.get('/api/admin/backup/export', async (c) => {
+  try {
+    const db = c.env.DB
+    
+    // Export all tables
+    const backup = {
+      version: '6.3',
+      timestamp: new Date().toISOString(),
+      data: {
+        users: (await db.prepare('SELECT * FROM users').all()).results,
+        teachers: (await db.prepare('SELECT * FROM teachers').all()).results,
+        teacher_classes: (await db.prepare('SELECT * FROM teacher_classes').all()).results,
+        evaluation_criteria: (await db.prepare('SELECT * FROM evaluation_criteria').all()).results,
+        teacher_custom_criteria: (await db.prepare('SELECT * FROM teacher_custom_criteria').all()).results,
+        evaluations: (await db.prepare('SELECT * FROM evaluations').all()).results,
+        evaluation_status: (await db.prepare('SELECT * FROM evaluation_status').all()).results,
+        settings: (await db.prepare('SELECT * FROM settings').all()).results,
+        user_activity_log: (await db.prepare('SELECT * FROM user_activity_log WHERE created_at > datetime("now", "-30 days")').all()).results,
+        permissions: (await db.prepare('SELECT * FROM permissions').all()).results,
+        user_permissions: (await db.prepare('SELECT * FROM user_permissions').all()).results,
+        classes: (await db.prepare('SELECT * FROM classes').all()).results,
+        user_classes: (await db.prepare('SELECT * FROM user_classes').all()).results
+      }
+    }
+    
+    // Calculate statistics
+    const stats = {
+      users: backup.data.users.length,
+      students: backup.data.users.filter((u: any) => u.user_type === 'student').length,
+      admins: backup.data.users.filter((u: any) => u.user_type !== 'student').length,
+      teachers: backup.data.teachers.length,
+      evaluations: backup.data.evaluations.length,
+      criteria: backup.data.evaluation_criteria.length
+    }
+    
+    return c.json({ 
+      success: true, 
+      backup,
+      stats,
+      filename: `afaq-backup-${new Date().toISOString().split('T')[0]}.json`
+    })
+  } catch (error) {
+    console.error('Error creating backup:', error)
+    return c.json({ success: false, message: 'خطأ في إنشاء النسخة الاحتياطية' }, 500)
+  }
+})
+
+// List available Time Travel bookmarks
+app.get('/api/admin/backup/bookmarks', async (c) => {
+  try {
+    // This would require wrangler CLI access which isn't available in Workers
+    // Instead, we'll return instructions
+    return c.json({ 
+      success: true,
+      message: 'استخدم wrangler CLI لعرض نقاط الاستعادة',
+      command: 'npx wrangler d1 time-travel info afaq-almansourah-db',
+      note: 'يمكن استعادة البيانات حتى 30 يوم للوراء'
+    })
+  } catch (error) {
+    return c.json({ success: false, message: 'خطأ في جلب نقاط الاستعادة' }, 500)
+  }
+})
+
 export default app

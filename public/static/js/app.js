@@ -951,6 +951,14 @@ async function showAdminDashboard() {
             <p class="text-gray-600 mt-2 text-sm">إضافة حسابات المدراء والمشرفين</p>
           </div>
 
+          <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="showBackupManagement()">
+            <div class="icon-3d inline-block mb-4">
+              <i class="fas fa-database text-teal-600" style="font-size: 3rem;"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800">النسخ الاحتياطي</h3>
+            <p class="text-gray-600 mt-2 text-sm">إنشاء واستعادة النسخ الاحتياطية</p>
+          </div>
+
           <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="showSettingsPage()">
             <div class="icon-3d inline-block mb-4">
               <i class="fas fa-cog text-gray-600" style="font-size: 3rem;"></i>
@@ -3883,6 +3891,15 @@ async function showAdminUsersManagement() {
                       <td class="py-3 px-4 text-center text-gray-600">${admin.phone || '-'}</td>
                       <td class="py-3 px-4 text-center">
                         <div class="flex justify-center gap-2">
+                          ${admin.id !== 1 && admin.user_type !== 'admin' ? `
+                          <button 
+                            onclick="showUserPermissions(${admin.id}, '${admin.full_name.replace(/'/g, "\\'")}')" 
+                            class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm"
+                            title="إدارة الصلاحيات"
+                          >
+                            <i class="fas fa-key"></i>
+                          </button>
+                          ` : ''}
                           <button 
                             onclick='editAdminUser(${JSON.stringify(admin)})' 
                             class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
@@ -4127,4 +4144,314 @@ function logout() {
   currentUser = null;
   localStorage.removeItem('currentUser');
   showLoginPage();
+}
+
+// ============================================
+// USER PERMISSIONS MANAGEMENT
+// ============================================
+
+async function showUserPermissions(userId, userName) {
+  try {
+    // Fetch all permissions and user's current permissions
+    const [allPermsRes, userPermsRes] = await Promise.all([
+      axios.get('/api/admin/permissions'),
+      axios.get(`/api/admin/users/${userId}/permissions`)
+    ]);
+    
+    const allPermissions = allPermsRes.data.permissions || [];
+    const userPermissions = userPermsRes.data.permissions || [];
+    const userPermKeys = userPermissions.map(p => p.permission_key);
+    
+    // Group permissions by category
+    const categories = {};
+    allPermissions.forEach(perm => {
+      if (!categories[perm.category]) {
+        categories[perm.category] = [];
+      }
+      categories[perm.category].push(perm);
+    });
+    
+    const categoryNames = {
+      students: 'إدارة الطلاب',
+      teachers: 'إدارة المدرسين',
+      evaluations: 'التقييمات',
+      reports: 'التقارير',
+      criteria: 'المعايير',
+      users: 'المستخدمين',
+      system: 'النظام'
+    };
+    
+    let permissionsHTML = '';
+    for (const [category, perms] of Object.entries(categories)) {
+      permissionsHTML += `
+        <div class="mb-6">
+          <h3 class="text-xl font-bold text-gray-800 mb-3 flex items-center">
+            <i class="fas fa-folder-open text-blue-600 ml-2"></i>
+            ${categoryNames[category] || category}
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            ${perms.map(perm => {
+              const isChecked = userPermKeys.includes(perm.permission_key);
+              return `
+                <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    class="permission-checkbox ml-2" 
+                    data-key="${perm.permission_key}"
+                    ${isChecked ? 'checked' : ''}
+                  />
+                  <div>
+                    <div class="font-semibold text-gray-800">${perm.permission_name_ar}</div>
+                    <div class="text-sm text-gray-600">${perm.description || ''}</div>
+                  </div>
+                </label>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+    
+    const modalHTML = `
+      <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" style="overflow-y: auto;">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div class="p-6 border-b border-gray-200 sticky top-0 bg-white">
+            <h2 class="text-2xl font-bold text-gray-800">
+              <i class="fas fa-key text-indigo-600 ml-2"></i>
+              إدارة صلاحيات: ${userName}
+            </h2>
+          </div>
+          
+          <div class="p-6">
+            <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-6">
+              <p class="text-blue-800">
+                <i class="fas fa-info-circle ml-2"></i>
+                <strong>ملاحظة:</strong> اختر الصلاحيات التي تريد منحها لهذا المستخدم. الصلاحيات تحدد ما يمكن للمستخدم فعله في النظام.
+              </p>
+            </div>
+            
+            ${permissionsHTML}
+            
+            <div class="flex justify-end gap-4 mt-6 pt-6 border-t border-gray-200">
+              <button onclick="closeModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold">
+                <i class="fas fa-times ml-2"></i>
+                إلغاء
+              </button>
+              <button onclick="saveUserPermissions(${userId})" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-semibold">
+                <i class="fas fa-save ml-2"></i>
+                حفظ الصلاحيات
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    const modalContainer = document.getElementById('modalContainer');
+    modalContainer.innerHTML = modalHTML;
+  } catch (error) {
+    console.error('Error loading permissions:', error);
+    alert('حدث خطأ في جلب الصلاحيات');
+  }
+}
+
+async function saveUserPermissions(userId) {
+  try {
+    const checkboxes = document.querySelectorAll('.permission-checkbox:checked');
+    const permissions = Array.from(checkboxes).map(cb => cb.dataset.key);
+    
+    const response = await axios.put(`/api/admin/users/${userId}/permissions`, {
+      permissions,
+      granted_by: currentUser.id
+    });
+    
+    if (response.data.success) {
+      alert('تم حفظ الصلاحيات بنجاح');
+      closeModal();
+      showAdminUsersManagement();
+    } else {
+      alert(response.data.message || 'حدث خطأ في حفظ الصلاحيات');
+    }
+  } catch (error) {
+    console.error('Error saving permissions:', error);
+    alert('حدث خطأ في حفظ الصلاحيات');
+  }
+}
+
+// ============================================
+// BACKUP & RESTORE MANAGEMENT
+// ============================================
+
+async function showBackupManagement() {
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="max-w-7xl mx-auto fade-in">
+      <!-- Header -->
+      <div class="glass-card p-6 mb-8">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-3xl font-bold text-gray-800">
+              <i class="fas fa-database text-teal-600 ml-2"></i>
+              إدارة النسخ الاحتياطية
+            </h2>
+            <p class="text-gray-600 text-lg mt-1">إنشاء واستعادة نسخ احتياطية كاملة من البيانات</p>
+          </div>
+          <button onclick="showAdminDashboard()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold">
+            <i class="fas fa-arrow-right ml-2"></i>
+            رجوع
+          </button>
+        </div>
+      </div>
+
+      <!-- Backup Options -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <!-- Export Backup -->
+        <div class="glass-card p-6">
+          <h3 class="text-2xl font-bold text-gray-800 mb-4">
+            <i class="fas fa-download text-green-600 ml-2"></i>
+            إنشاء نسخة احتياطية
+          </h3>
+          <p class="text-gray-600 mb-6 text-lg">
+            تنزيل نسخة احتياطية كاملة من قاعدة البيانات بصيغة JSON تحتوي على جميع البيانات (الطلاب، المعلمين، التقييمات، الإعدادات).
+          </p>
+          <button 
+            onclick="createBackup()" 
+            class="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-4 rounded-lg font-semibold text-lg"
+          >
+            <i class="fas fa-download ml-2"></i>
+            إنشاء وتنزيل النسخة الاحتياطية
+          </button>
+          <div class="mt-4 p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+            <p class="text-green-800 text-sm">
+              <i class="fas fa-info-circle ml-2"></i>
+              <strong>ملاحظة:</strong> يتم حفظ النسخة الاحتياطية كملف JSON يحتوي على جميع البيانات. احتفظ بهذا الملف في مكان آمن.
+            </p>
+          </div>
+        </div>
+
+        <!-- Time Travel Restore -->
+        <div class="glass-card p-6">
+          <h3 class="text-2xl font-bold text-gray-800 mb-4">
+            <i class="fas fa-history text-blue-600 ml-2"></i>
+            استعادة من Time Travel
+          </h3>
+          <p class="text-gray-600 mb-6 text-lg">
+            يمكن استعادة قاعدة البيانات إلى أي نقطة زمنية خلال آخر 30 يوماً باستخدام Cloudflare D1 Time Travel.
+          </p>
+          <div class="space-y-3 mb-6">
+            <div class="flex items-center text-gray-700">
+              <i class="fas fa-check-circle text-green-600 ml-2"></i>
+              <span>استعادة تلقائية إلى أي نقطة زمنية</span>
+            </div>
+            <div class="flex items-center text-gray-700">
+              <i class="fas fa-check-circle text-green-600 ml-2"></i>
+              <span>متاح لآخر 30 يوم</span>
+            </div>
+            <div class="flex items-center text-gray-700">
+              <i class="fas fa-check-circle text-green-600 ml-2"></i>
+              <span>استعادة سريعة وآمنة</span>
+            </div>
+          </div>
+          <div class="p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+            <p class="text-blue-800 text-sm mb-3">
+              <strong>للاستعادة من Time Travel:</strong>
+            </p>
+            <code class="block bg-white p-3 rounded text-sm text-gray-800 mb-2">
+              npx wrangler d1 time-travel info afaq-almansourah-db
+            </code>
+            <code class="block bg-white p-3 rounded text-sm text-gray-800">
+              npx wrangler d1 time-travel restore afaq-almansourah-db --bookmark=BOOKMARK_ID
+            </code>
+          </div>
+        </div>
+      </div>
+
+      <!-- Backup History -->
+      <div class="glass-card p-6">
+        <h3 class="text-2xl font-bold text-gray-800 mb-4">
+          <i class="fas fa-list text-purple-600 ml-2"></i>
+          آخر النسخ الاحتياطية
+        </h3>
+        <div id="backupHistory" class="text-gray-600">
+          <p class="text-center py-8">لا توجد نسخ احتياطية محفوظة حتى الآن</p>
+          <p class="text-center text-sm">النسخ الاحتياطية المنشأة سيتم عرضها هنا</p>
+        </div>
+      </div>
+
+      <!-- Backup Guide -->
+      <div class="glass-card p-6 mt-8 bg-yellow-50 border-2 border-yellow-200">
+        <h3 class="text-xl font-bold text-yellow-800 mb-4">
+          <i class="fas fa-exclamation-triangle ml-2"></i>
+          نصائح مهمة للنسخ الاحتياطي
+        </h3>
+        <ul class="space-y-2 text-yellow-900">
+          <li>
+            <i class="fas fa-check ml-2"></i>
+            قم بإنشاء نسخة احتياطية قبل أي تعديلات كبيرة على النظام
+          </li>
+          <li>
+            <i class="fas fa-check ml-2"></i>
+            احتفظ بنسخ احتياطية متعددة في أماكن مختلفة
+          </li>
+          <li>
+            <i class="fas fa-check ml-2"></i>
+            اختبر النسخ الاحتياطية بشكل دوري للتأكد من صحتها
+          </li>
+          <li>
+            <i class="fas fa-check ml-2"></i>
+            استخدم Time Travel للاستعادة السريعة (آخر 30 يوم)
+          </li>
+          <li>
+            <i class="fas fa-check ml-2"></i>
+            راجع ملف BACKUP_GUIDE.md للمزيد من التفاصيل
+          </li>
+        </ul>
+      </div>
+    </div>
+  `;
+}
+
+async function createBackup() {
+  try {
+    const button = event.target;
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري إنشاء النسخة...';
+    
+    const response = await axios.get('/api/admin/backup/export');
+    
+    if (response.data.success) {
+      const backup = response.data.backup;
+      const stats = response.data.stats;
+      const filename = response.data.filename;
+      
+      // Convert to JSON and create download
+      const dataStr = JSON.stringify(backup, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = window.URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      
+      alert(`تم إنشاء النسخة الاحتياطية بنجاح!\n\nالإحصائيات:\n` +
+            `- المستخدمون: ${stats.users}\n` +
+            `- الطلاب: ${stats.students}\n` +
+            `- المدراء: ${stats.admins}\n` +
+            `- المعلمون: ${stats.teachers}\n` +
+            `- التقييمات: ${stats.evaluations}\n` +
+            `- المعايير: ${stats.criteria}\n\n` +
+            `تم تنزيل الملف: ${filename}`);
+    } else {
+      alert('حدث خطأ في إنشاء النسخة الاحتياطية');
+    }
+    
+    button.disabled = false;
+    button.innerHTML = '<i class="fas fa-download ml-2"></i> إنشاء وتنزيل النسخة الاحتياطية';
+  } catch (error) {
+    console.error('Error creating backup:', error);
+    alert('حدث خطأ في إنشاء النسخة الاحتياطية');
+    event.target.disabled = false;
+    event.target.innerHTML = '<i class="fas fa-download ml-2"></i> إنشاء وتنزيل النسخة الاحتياطية';
+  }
 }
