@@ -2187,4 +2187,151 @@ app.delete('/api/admin/students/grade/:gradeLevel', async (c) => {
   }
 })
 
+// ============================================
+// Admin Users Management APIs
+// ============================================
+
+// Get all admin users
+app.get('/api/admin/users/admins', async (c) => {
+  try {
+    const db = c.env.DB
+    
+    const result = await db
+      .prepare(`
+        SELECT id, username, full_name, email, phone, user_type, created_at
+        FROM users 
+        WHERE user_type IN ('admin', 'principal', 'supervisor', 'manager')
+        ORDER BY created_at DESC
+      `)
+      .all()
+    
+    return c.json({ success: true, admins: result.results })
+  } catch (error) {
+    console.error('Error fetching admin users:', error)
+    return c.json({ success: false, message: 'حدث خطأ في جلب المستخدمين الإداريين' }, 500)
+  }
+})
+
+// Add new admin user
+app.post('/api/admin/users/admins', async (c) => {
+  try {
+    const { username, password, full_name, email, phone, user_type } = await c.req.json()
+    const db = c.env.DB
+    
+    // Validate user_type
+    const validTypes = ['admin', 'principal', 'supervisor', 'manager']
+    if (!validTypes.includes(user_type)) {
+      return c.json({ 
+        success: false, 
+        message: 'نوع المستخدم غير صحيح' 
+      }, 400)
+    }
+    
+    // Check if username exists
+    const existing = await db
+      .prepare('SELECT id FROM users WHERE username = ?')
+      .bind(username)
+      .first()
+    
+    if (existing) {
+      return c.json({ success: false, message: 'اسم المستخدم موجود بالفعل' }, 400)
+    }
+    
+    // Hash password (simple hash - in production use bcrypt)
+    const hashedPassword = password // TODO: Add proper password hashing
+    
+    // Insert user
+    await db
+      .prepare(`
+        INSERT INTO users (username, password, full_name, email, phone, user_type)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `)
+      .bind(username, hashedPassword, full_name, email || null, phone || null, user_type)
+      .run()
+    
+    return c.json({ 
+      success: true, 
+      message: 'تم إضافة المستخدم الإداري بنجاح' 
+    })
+  } catch (error) {
+    console.error('Error adding admin user:', error)
+    return c.json({ success: false, message: 'حدث خطأ في إضافة المستخدم الإداري' }, 500)
+  }
+})
+
+// Update admin user
+app.put('/api/admin/users/admins/:id', async (c) => {
+  try {
+    const userId = c.req.param('id')
+    const { full_name, email, phone, user_type, password } = await c.req.json()
+    const db = c.env.DB
+    
+    // Validate user_type if provided
+    if (user_type) {
+      const validTypes = ['admin', 'principal', 'supervisor', 'manager']
+      if (!validTypes.includes(user_type)) {
+        return c.json({ 
+          success: false, 
+          message: 'نوع المستخدم غير صحيح' 
+        }, 400)
+      }
+    }
+    
+    // Build update query
+    let query = 'UPDATE users SET full_name = ?, email = ?, phone = ?, user_type = ?'
+    let params = [full_name, email || null, phone || null, user_type]
+    
+    // Add password update if provided
+    if (password && password.trim() !== '') {
+      query += ', password = ?'
+      params.push(password) // TODO: Add proper password hashing
+    }
+    
+    query += ', updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+    params.push(userId)
+    
+    await db
+      .prepare(query)
+      .bind(...params)
+      .run()
+    
+    return c.json({ 
+      success: true, 
+      message: 'تم تحديث بيانات المستخدم بنجاح' 
+    })
+  } catch (error) {
+    console.error('Error updating admin user:', error)
+    return c.json({ success: false, message: 'حدث خطأ في تحديث المستخدم' }, 500)
+  }
+})
+
+// Delete admin user
+app.delete('/api/admin/users/admins/:id', async (c) => {
+  try {
+    const userId = c.req.param('id')
+    const db = c.env.DB
+    
+    // Prevent deleting the main admin (id = 1)
+    if (userId === '1') {
+      return c.json({ 
+        success: false, 
+        message: 'لا يمكن حذف المدير الرئيسي' 
+      }, 403)
+    }
+    
+    await db
+      .prepare('DELETE FROM users WHERE id = ? AND user_type != ?')
+      .bind(userId, 'student')
+      .run()
+    
+    return c.json({ 
+      success: true, 
+      message: 'تم حذف المستخدم الإداري بنجاح' 
+    })
+  } catch (error) {
+    console.error('Error deleting admin user:', error)
+    return c.json({ success: false, message: 'حدث خطأ في حذف المستخدم' }, 500)
+  }
+})
+
 export default app

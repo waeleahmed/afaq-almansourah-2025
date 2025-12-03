@@ -931,6 +931,14 @@ async function showAdminDashboard() {
             <p class="text-gray-600 mt-2 text-sm">رفع الطلاب والمعلمين بالجملة</p>
           </div>
 
+          <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="showAdminUsersManagement()">
+            <div class="icon-3d inline-block mb-4">
+              <i class="fas fa-user-shield text-indigo-600" style="font-size: 3rem;"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800">إدارة المستخدمين الإداريين</h3>
+            <p class="text-gray-600 mt-2 text-sm">إضافة حسابات المدراء والمشرفين</p>
+          </div>
+
           <div class="glass-card p-6 text-center hover:shadow-2xl transition-all cursor-pointer" onclick="showSettingsPage()">
             <div class="icon-3d inline-block mb-4">
               <i class="fas fa-cog text-gray-600" style="font-size: 3rem;"></i>
@@ -3738,6 +3746,371 @@ async function deleteGradeStudents(gradeLevel, studentCount) {
 // ============================================
 // Logout
 // ============================================
+// ============================================
+// Admin Users Management
+// ============================================
+async function showAdminUsersManagement() {
+  try {
+    const response = await axios.get('/api/admin/users/admins');
+    const admins = response.data.admins || [];
+    
+    const app = document.getElementById('app');
+    app.innerHTML = `
+      <div class="max-w-7xl mx-auto fade-in">
+        <!-- Header -->
+        <div class="glass-card p-6 mb-8">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-3xl font-bold text-gray-800">
+                <i class="fas fa-user-shield ml-2 text-indigo-600"></i>
+                إدارة المستخدمين الإداريين
+              </h2>
+              <p class="text-gray-600 text-lg mt-1">إضافة وتعديل حسابات المدراء والمشرفين</p>
+            </div>
+            <div class="flex gap-3">
+              <button onclick="showAddAdminUserModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-semibold">
+                <i class="fas fa-user-plus ml-2"></i>
+                إضافة مستخدم إداري
+              </button>
+              <button onclick="showAdminDashboard()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold">
+                <i class="fas fa-arrow-right ml-2"></i>
+                رجوع
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Types Legend -->
+        <div class="glass-card p-6 mb-8">
+          <h3 class="text-xl font-bold text-gray-800 mb-4">
+            <i class="fas fa-info-circle ml-2 text-blue-600"></i>
+            أنواع المستخدمين
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-red-50 p-4 rounded-lg border-2 border-red-200">
+              <div class="flex items-center gap-2 mb-2">
+                <i class="fas fa-crown text-red-600"></i>
+                <span class="font-bold text-red-800">مدير النظام الرئيسي</span>
+              </div>
+              <p class="text-sm text-gray-600">صلاحيات كاملة لجميع الوظائف</p>
+            </div>
+            <div class="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
+              <div class="flex items-center gap-2 mb-2">
+                <i class="fas fa-user-tie text-blue-600"></i>
+                <span class="font-bold text-blue-800">مدير المدرسة</span>
+              </div>
+              <p class="text-sm text-gray-600">إدارة شؤون المدرسة والتقييمات</p>
+            </div>
+            <div class="bg-green-50 p-4 rounded-lg border-2 border-green-200">
+              <div class="flex items-center gap-2 mb-2">
+                <i class="fas fa-user-check text-green-600"></i>
+                <span class="font-bold text-green-800">مشرف</span>
+              </div>
+              <p class="text-sm text-gray-600">متابعة التقييمات وإعداد التقارير</p>
+            </div>
+            <div class="bg-purple-50 p-4 rounded-lg border-2 border-purple-200">
+              <div class="flex items-center gap-2 mb-2">
+                <i class="fas fa-user-cog text-purple-600"></i>
+                <span class="font-bold text-purple-800">مدير إداري</span>
+              </div>
+              <p class="text-sm text-gray-600">إدارة البيانات والمستخدمين</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admins Table -->
+        <div class="glass-card p-6">
+          <h3 class="text-xl font-bold text-gray-800 mb-4">
+            <i class="fas fa-list ml-2"></i>
+            قائمة المستخدمين الإداريين (${admins.length})
+          </h3>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-100">
+                <tr>
+                  <th class="py-3 px-4 text-right">الاسم الكامل</th>
+                  <th class="py-3 px-4 text-center">اسم المستخدم</th>
+                  <th class="py-3 px-4 text-center">النوع</th>
+                  <th class="py-3 px-4 text-center">البريد الإلكتروني</th>
+                  <th class="py-3 px-4 text-center">الهاتف</th>
+                  <th class="py-3 px-4 text-center">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${admins.map(admin => {
+                  const typeNames = {
+                    'admin': 'مدير نظام',
+                    'principal': 'مدير مدرسة',
+                    'supervisor': 'مشرف',
+                    'manager': 'مدير إداري'
+                  };
+                  const typeColors = {
+                    'admin': 'red',
+                    'principal': 'blue',
+                    'supervisor': 'green',
+                    'manager': 'purple'
+                  };
+                  const typeIcons = {
+                    'admin': 'crown',
+                    'principal': 'user-tie',
+                    'supervisor': 'user-check',
+                    'manager': 'user-cog'
+                  };
+                  
+                  return `
+                    <tr class="border-b hover:bg-gray-50">
+                      <td class="py-3 px-4 font-semibold">${admin.full_name}</td>
+                      <td class="py-3 px-4 text-center text-gray-600">${admin.username}</td>
+                      <td class="py-3 px-4 text-center">
+                        <span class="bg-${typeColors[admin.user_type]}-100 text-${typeColors[admin.user_type]}-800 px-3 py-1 rounded-full text-sm">
+                          <i class="fas fa-${typeIcons[admin.user_type]} ml-1"></i>
+                          ${typeNames[admin.user_type] || admin.user_type}
+                        </span>
+                      </td>
+                      <td class="py-3 px-4 text-center text-gray-600">${admin.email || '-'}</td>
+                      <td class="py-3 px-4 text-center text-gray-600">${admin.phone || '-'}</td>
+                      <td class="py-3 px-4 text-center">
+                        <div class="flex justify-center gap-2">
+                          <button 
+                            onclick='editAdminUser(${JSON.stringify(admin)})' 
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                            title="تعديل"
+                          >
+                            <i class="fas fa-edit"></i>
+                          </button>
+                          ${admin.id !== 1 ? `
+                          <button 
+                            onclick="deleteAdminUser(${admin.id}, '${admin.full_name}')" 
+                            class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+                            title="حذف"
+                          >
+                            <i class="fas fa-trash"></i>
+                          </button>
+                          ` : '<span class="text-gray-400 text-sm">محمي</span>'}
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Container -->
+      <div id="modalContainer"></div>
+    `;
+  } catch (error) {
+    console.error('Error loading admin users:', error);
+    alert('حدث خطأ في تحميل المستخدمين الإداريين');
+  }
+}
+
+function showAddAdminUserModal() {
+  const modalContainer = document.getElementById('modalContainer');
+  modalContainer.innerHTML = `
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeModal()">
+      <div class="bg-white rounded-lg p-8 max-w-2xl w-full mx-4" onclick="event.stopPropagation()">
+        <h3 class="text-2xl font-bold text-gray-800 mb-6">
+          <i class="fas fa-user-plus ml-2 text-indigo-600"></i>
+          إضافة مستخدم إداري جديد
+        </h3>
+        <form id="addAdminUserForm" onsubmit="handleAddAdminUser(event)">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-gray-700 font-semibold mb-2">اسم المستخدم *</label>
+              <input type="text" name="username" required class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="admin2">
+            </div>
+            <div>
+              <label class="block text-gray-700 font-semibold mb-2">كلمة المرور *</label>
+              <input type="password" name="password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="********">
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <label class="block text-gray-700 font-semibold mb-2">الاسم الكامل *</label>
+            <input type="text" name="full_name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="محمد أحمد">
+          </div>
+          
+          <div class="mb-4">
+            <label class="block text-gray-700 font-semibold mb-2">نوع المستخدم *</label>
+            <select name="user_type" required class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+              <option value="">اختر النوع</option>
+              <option value="admin">مدير نظام</option>
+              <option value="principal">مدير مدرسة</option>
+              <option value="supervisor">مشرف</option>
+              <option value="manager">مدير إداري</option>
+            </select>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label class="block text-gray-700 font-semibold mb-2">البريد الإلكتروني</label>
+              <input type="email" name="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="email@example.com">
+            </div>
+            <div>
+              <label class="block text-gray-700 font-semibold mb-2">رقم الهاتف</label>
+              <input type="tel" name="phone" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="05xxxxxxxx">
+            </div>
+          </div>
+          
+          <div class="flex gap-3">
+            <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold">
+              <i class="fas fa-check ml-2"></i>
+              إضافة المستخدم
+            </button>
+            <button type="button" onclick="closeModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold">
+              <i class="fas fa-times ml-2"></i>
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+async function handleAddAdminUser(event) {
+  event.preventDefault();
+  const formData = new FormData(event.target);
+  const data = {
+    username: formData.get('username'),
+    password: formData.get('password'),
+    full_name: formData.get('full_name'),
+    user_type: formData.get('user_type'),
+    email: formData.get('email') || null,
+    phone: formData.get('phone') || null
+  };
+  
+  try {
+    const response = await axios.post('/api/admin/users/admins', data);
+    if (response.data.success) {
+      alert('تم إضافة المستخدم الإداري بنجاح');
+      closeModal();
+      showAdminUsersManagement();
+    } else {
+      alert(response.data.message || 'حدث خطأ في إضافة المستخدم');
+    }
+  } catch (error) {
+    console.error('Error adding admin user:', error);
+    alert('حدث خطأ في إضافة المستخدم الإداري');
+  }
+}
+
+function editAdminUser(admin) {
+  const modalContainer = document.getElementById('modalContainer');
+  modalContainer.innerHTML = `
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="closeModal()">
+      <div class="bg-white rounded-lg p-8 max-w-2xl w-full mx-4" onclick="event.stopPropagation()">
+        <h3 class="text-2xl font-bold text-gray-800 mb-6">
+          <i class="fas fa-edit ml-2 text-blue-600"></i>
+          تعديل بيانات المستخدم
+        </h3>
+        <form id="editAdminUserForm" onsubmit="handleEditAdminUser(event, ${admin.id})">
+          <div class="mb-4 bg-gray-100 p-3 rounded">
+            <p class="text-sm text-gray-600">اسم المستخدم: <span class="font-semibold">${admin.username}</span></p>
+          </div>
+          
+          <div class="mb-4">
+            <label class="block text-gray-700 font-semibold mb-2">الاسم الكامل *</label>
+            <input type="text" name="full_name" value="${admin.full_name}" required class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+          </div>
+          
+          <div class="mb-4">
+            <label class="block text-gray-700 font-semibold mb-2">نوع المستخدم *</label>
+            <select name="user_type" required class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+              <option value="admin" ${admin.user_type === 'admin' ? 'selected' : ''}>مدير نظام</option>
+              <option value="principal" ${admin.user_type === 'principal' ? 'selected' : ''}>مدير مدرسة</option>
+              <option value="supervisor" ${admin.user_type === 'supervisor' ? 'selected' : ''}>مشرف</option>
+              <option value="manager" ${admin.user_type === 'manager' ? 'selected' : ''}>مدير إداري</option>
+            </select>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-gray-700 font-semibold mb-2">البريد الإلكتروني</label>
+              <input type="email" name="email" value="${admin.email || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+            </div>
+            <div>
+              <label class="block text-gray-700 font-semibold mb-2">رقم الهاتف</label>
+              <input type="tel" name="phone" value="${admin.phone || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+            </div>
+          </div>
+          
+          <div class="mb-6">
+            <label class="block text-gray-700 font-semibold mb-2">كلمة المرور الجديدة (اتركها فارغة إذا لم ترغب في تغييرها)</label>
+            <input type="password" name="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="********">
+          </div>
+          
+          <div class="flex gap-3">
+            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold">
+              <i class="fas fa-save ml-2"></i>
+              حفظ التعديلات
+            </button>
+            <button type="button" onclick="closeModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold">
+              <i class="fas fa-times ml-2"></i>
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+async function handleEditAdminUser(event, userId) {
+  event.preventDefault();
+  const formData = new FormData(event.target);
+  const data = {
+    full_name: formData.get('full_name'),
+    user_type: formData.get('user_type'),
+    email: formData.get('email') || null,
+    phone: formData.get('phone') || null,
+    password: formData.get('password') || ''
+  };
+  
+  try {
+    const response = await axios.put(`/api/admin/users/admins/${userId}`, data);
+    if (response.data.success) {
+      alert('تم تحديث بيانات المستخدم بنجاح');
+      closeModal();
+      showAdminUsersManagement();
+    } else {
+      alert(response.data.message || 'حدث خطأ في تحديث المستخدم');
+    }
+  } catch (error) {
+    console.error('Error updating admin user:', error);
+    alert('حدث خطأ في تحديث المستخدم');
+  }
+}
+
+async function deleteAdminUser(userId, fullName) {
+  if (!confirm(`هل أنت متأكد من حذف المستخدم: ${fullName}؟\n\nهذا الإجراء لا يمكن التراجع عنه!`)) {
+    return;
+  }
+  
+  try {
+    const response = await axios.delete(`/api/admin/users/admins/${userId}`);
+    if (response.data.success) {
+      alert('تم حذف المستخدم بنجاح');
+      showAdminUsersManagement();
+    } else {
+      alert(response.data.message || 'حدث خطأ في حذف المستخدم');
+    }
+  } catch (error) {
+    console.error('Error deleting admin user:', error);
+    alert('حدث خطأ في حذف المستخدم');
+  }
+}
+
+function closeModal() {
+  const modalContainer = document.getElementById('modalContainer');
+  if (modalContainer) {
+    modalContainer.innerHTML = '';
+  }
+}
+
 function logout() {
   currentUser = null;
   localStorage.removeItem('currentUser');
