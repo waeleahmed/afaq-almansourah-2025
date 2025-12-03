@@ -2198,10 +2198,12 @@ app.get('/api/admin/users/admins', async (c) => {
     
     const result = await db
       .prepare(`
-        SELECT id, username, full_name, email, phone, user_type, created_at
-        FROM users 
-        WHERE user_type IN ('admin', 'principal', 'supervisor', 'manager')
-        ORDER BY created_at DESC
+        SELECT u.id, u.username, u.full_name, u.email, u.phone, 
+               COALESCE(ar.role, 'admin') as user_type, u.created_at
+        FROM users u
+        LEFT JOIN admin_roles ar ON u.id = ar.user_id
+        WHERE u.user_type = 'admin'
+        ORDER BY u.created_at DESC
       `)
       .all()
     
@@ -2218,9 +2220,9 @@ app.post('/api/admin/users/admins', async (c) => {
     const { username, password, full_name, email, phone, user_type } = await c.req.json()
     const db = c.env.DB
     
-    // Validate user_type
-    const validTypes = ['admin', 'principal', 'supervisor', 'manager']
-    if (!validTypes.includes(user_type)) {
+    // Validate role (not user_type anymore)
+    const validRoles = ['admin', 'principal', 'supervisor', 'manager']
+    if (!validRoles.includes(user_type)) {
       return c.json({ 
         success: false, 
         message: 'نوع المستخدم غير صحيح' 
@@ -2240,13 +2242,25 @@ app.post('/api/admin/users/admins', async (c) => {
     // Hash password (simple hash - in production use bcrypt)
     const hashedPassword = password // TODO: Add proper password hashing
     
-    // Insert user
-    await db
+    // Insert user with user_type='admin' (to satisfy CHECK constraint)
+    const insertResult = await db
       .prepare(`
         INSERT INTO users (username, password, full_name, email, phone, user_type)
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, 'admin')
       `)
-      .bind(username, hashedPassword, full_name, email || null, phone || null, user_type)
+      .bind(username, hashedPassword, full_name, email || null, phone || null)
+      .run()
+    
+    // Get the new user ID
+    const newUserId = insertResult.meta.last_row_id
+    
+    // Insert role in admin_roles table
+    await db
+      .prepare(`
+        INSERT INTO admin_roles (user_id, role, assigned_by)
+        VALUES (?, ?, 1)
+      `)
+      .bind(newUserId, user_type)
       .run()
     
     return c.json({ 
