@@ -1819,13 +1819,25 @@ async function showTeachersManagement() {
                         ` : '<span class="text-gray-400">لا توجد تقييمات</span>'}
                       </td>
                       <td class="py-3 px-4 text-center">
-                        <button 
-                          onclick="showTeacherReport(${teacher.id})" 
-                          class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded font-semibold"
-                        >
-                          <i class="fas fa-chart-line ml-2"></i>
-                          التقرير التفصيلي
-                        </button>
+                        <div class="flex gap-2 justify-center">
+                          <button 
+                            onclick="showTeacherReport(${teacher.id})" 
+                            class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded font-semibold"
+                          >
+                            <i class="fas fa-chart-line ml-2"></i>
+                            التقرير التفصيلي
+                          </button>
+                          ${teacher.total_evaluations > 0 ? `
+                          <button 
+                            onclick="showTeacherAnalysis(${teacher.id}, '${teacher.full_name}')" 
+                            class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded font-semibold"
+                            title="تحليل نقاط القوة والضعف"
+                          >
+                            <i class="fas fa-chart-bar ml-2"></i>
+                            التحليل
+                          </button>
+                          ` : ''}
+                        </div>
                       </td>
                     </tr>
                   `;
@@ -1907,7 +1919,7 @@ async function showReportsPage() {
         </div>
 
         <!-- Top Teachers -->
-        <div class="glass-card p-6">
+        <div class="glass-card p-6 mb-8">
           <h3 class="text-xl font-bold text-gray-800 mb-6">
             <i class="fas fa-trophy ml-2 text-yellow-500"></i>
             أفضل المعلمين تقييماً
@@ -1928,10 +1940,73 @@ async function showReportsPage() {
                     <div class="text-3xl font-bold text-${colors[index]}-600 mb-2">
                       ${parseFloat(teacher.avg_score).toFixed(2)}/10
                     </div>
-                    <p class="text-sm text-gray-600">${teacher.total_evaluations} تقييم</p>
+                    <p class="text-sm text-gray-600 mb-2">${teacher.total_evaluations} تقييم</p>
+                    <button 
+                      onclick="showTeacherAnalysis(${teacher.id}, '${teacher.full_name}')"
+                      class="mt-3 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold w-full"
+                    >
+                      <i class="fas fa-chart-line ml-2"></i>
+                      تحليل نقاط القوة والضعف
+                    </button>
                   </div>
                 `;
               }).join('')}
+          </div>
+        </div>
+
+        <!-- Teachers Analysis Section - NEW -->
+        <div class="glass-card p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold text-gray-800">
+              <i class="fas fa-chart-bar ml-2 text-purple-600"></i>
+              تحليل نقاط القوة والضعف - جميع المعلمين
+            </h3>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-100">
+                <tr>
+                  <th class="py-3 px-4 text-right">المعلم</th>
+                  <th class="py-3 px-4 text-center">المادة</th>
+                  <th class="py-3 px-4 text-center">عدد التقييمات</th>
+                  <th class="py-3 px-4 text-center">المتوسط</th>
+                  <th class="py-3 px-4 text-center">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${teachersStats.data.teachers
+                  .filter(t => t.total_evaluations > 0)
+                  .sort((a, b) => b.avg_score - a.avg_score)
+                  .map(teacher => `
+                    <tr class="border-b hover:bg-gray-50">
+                      <td class="py-3 px-4 font-semibold">${teacher.full_name}</td>
+                      <td class="py-3 px-4 text-center text-gray-600">${teacher.subject}</td>
+                      <td class="py-3 px-4 text-center">
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                          ${teacher.total_evaluations}
+                        </span>
+                      </td>
+                      <td class="py-3 px-4 text-center">
+                        <span class="text-lg font-bold ${
+                          parseFloat(teacher.avg_score) >= 8 ? 'text-green-600' : 
+                          parseFloat(teacher.avg_score) >= 6 ? 'text-yellow-600' : 'text-red-600'
+                        }">
+                          ${parseFloat(teacher.avg_score).toFixed(2)}/10
+                        </span>
+                      </td>
+                      <td class="py-3 px-4 text-center">
+                        <button 
+                          onclick="showTeacherAnalysis(${teacher.id}, '${teacher.full_name}')"
+                          class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+                        >
+                          <i class="fas fa-chart-line ml-2"></i>
+                          عرض التحليل
+                        </button>
+                      </td>
+                    </tr>
+                  `).join('')}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
