@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="آفاق المنصورة - نظام تقييم المعلمين الإلكتروني. حوّل تقييم المعلمين من ورقي إلى رقمي في 7 أيام!">
+    <meta name="keywords" content="تقييم المعلمين, نظام إلكتروني, مدارس, تعليم, آفاق المنصورة">
+    <title>آفاق المنصورة - نظام تقييم المعلمين الإلكتروني</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+        
+        * {
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .gradient-bg-2 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .gradient-bg-3 {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(102, 126, 234, 0.8); }
+        }
+        
+        .pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 1rem;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .success-message {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 2000;
+            animation: slideInRight 0.5s;
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(400px); }
+            to { transform: translateX(0); }
+        }
+        
+        /* Smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Success Message -->
+    <div id="successMessage" class="success-message">
+        <i class="fas fa-check-circle ml-2"></i>
+        <span id="successText">تم إرسال طلبك بنجاح!</span>
+    </div>
+
+    <!-- Header/Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-graduation-cap text-4xl text-purple-600"></i>
+                    <div>
+                        <h1 class="text-2xl font-black text-gray-800">آفاق المنصورة</h1>
+                        <p class="text-sm text-gray-600">نظام تقييم المعلمين الإلكتروني</p>
+                    </div>
+                </div>
+                <div class="hidden md:flex gap-6">
+                    <a href="#features" class="text-gray-700 hover:text-purple-600 font-bold transition-colors">المميزات</a>
+                    <a href="#pricing" class="text-gray-700 hover:text-purple-600 font-bold transition-colors">الأسعار</a>
+                    <a href="#testimonials" class="text-gray-700 hover:text-purple-600 font-bold transition-colors">آراء العملاء</a>
+                    <a href="#contact" class="text-gray-700 hover:text-purple-600 font-bold transition-colors">اتصل بنا</a>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="openDemoModal()" class="bg-purple-600 text-white px-6 py-2 rounded-full font-bold hover:bg-purple-700 transition-all pulse-glow">
+                        <i class="fas fa-play ml-2"></i>
+                        عرض توضيحي
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-20 px-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h2 class="text-5xl md:text-6xl font-black mb-6 leading-tight">
+                        حوّل تقييم المعلمين من ورقي إلى رقمي
+                    </h2>
+                    <p class="text-2xl mb-8 opacity-90">
+                        في <span class="font-black text-yellow-300">7 أيام</span> فقط! 🚀
+                    </p>
+                    <ul class="space-y-4 text-xl mb-8">
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> سرعة وسهولة في الاستخدام</li>
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> سرية تامة للتقييمات</li>
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> تقارير تحليلية ذكية</li>
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> أمان وتشفير كامل</li>
+                    </ul>
+                    <div class="flex flex-wrap gap-4">
+                        <button onclick="openDemoModal()" class="bg-white text-purple-600 px-8 py-4 rounded-full text-xl font-black hover:bg-yellow-300 transition-all shadow-2xl">
+                            <i class="fas fa-rocket ml-2"></i>
+                            احجز عرض توضيحي مجاني
+                        </button>
+                        <button onclick="openQuoteModal()" class="bg-purple-900/50 backdrop-blur text-white px-8 py-4 rounded-full text-xl font-bold hover:bg-purple-900 transition-all border-2 border-white/50">
+                            <i class="fas fa-dollar-sign ml-2"></i>
+                            احصل على عرض سعر
+                        </button>
+                    </div>
+                    <p class="mt-6 text-lg opacity-75">
+                        <i class="fas fa-gift ml-2"></i>
+                        خصم خاص <span class="font-black text-yellow-300">20%</span> لأول 10 مدارس!
+                    </p>
+                </div>
+                <div class="float-animation">
+                    <div class="bg-white/10 backdrop-blur-lg rounded-3xl p-8 text-center">
+                        <div class="text-8xl mb-6">📊</div>
+                        <h3 class="text-3xl font-bold mb-4">نتائج حقيقية</h3>
+                        <div class="grid grid-cols-2 gap-6 text-center">
+                            <div class="bg-white/20 rounded-2xl p-4">
+                                <div class="text-4xl font-black">90%</div>
+                                <div class="text-sm mt-2">توفير في الوقت</div>
+                            </div>
+                            <div class="bg-white/20 rounded-2xl p-4">
+                                <div class="text-4xl font-black">100%</div>
+                                <div class="text-sm mt-2">سرية التقييمات</div>
+                            </div>
+                            <div class="bg-white/20 rounded-2xl p-4">
+                                <div class="text-4xl font-black">5 دقائق</div>
+                                <div class="text-sm mt-2">لكل تقييم</div>
+                            </div>
+                            <div class="bg-white/20 rounded-2xl p-4">
+                                <div class="text-4xl font-black">0 ريال</div>
+                                <div class="text-sm mt-2">تكلفة الطباعة</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 px-4 bg-white">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-5xl font-black text-center text-gray-800 mb-4">
+                <i class="fas fa-star text-yellow-500 ml-4"></i>
+                لماذا آفاق المنصورة؟
+            </h2>
+            <p class="text-xl text-center text-gray-600 mb-16">الحل الأذكى والأسهل لتقييم المعلمين</p>
+            
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="text-center card-hover bg-gray-50 p-6 rounded-3xl">
+                    <div class="feature-icon gradient-bg text-white">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">سرعة فائقة</h3>
+                    <p class="text-gray-600">تقييم كامل في 5 دقائق فقط بدلاً من ساعات</p>
+                </div>
+                
+                <div class="text-center card-hover bg-gray-50 p-6 rounded-3xl">
+                    <div class="feature-icon gradient-bg-2 text-white">
+                        <i class="fas fa-user-secret"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">سرية مطلقة</h3>
+                    <p class="text-gray-600">التقييمات مجهولة المصدر بالكامل</p>
+                </div>
+                
+                <div class="text-center card-hover bg-gray-50 p-6 rounded-3xl">
+                    <div class="feature-icon gradient-bg-3 text-white">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">تقارير ذكية</h3>
+                    <p class="text-gray-600">رسوم بيانية ومقارنات فورية</p>
+                </div>
+                
+                <div class="text-center card-hover bg-gray-50 p-6 rounded-3xl">
+                    <div class="feature-icon bg-green-500 text-white">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">أمان عالي</h3>
+                    <p class="text-gray-600">تشفير SSL واستضافة آمنة</p>
+                </div>
+                
+                <div class="text-center card-hover bg-gray-50 p-6 rounded-3xl">
+                    <div class="feature-icon bg-blue-500 text-white">
+                        <i class="fas fa-file-excel"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">رفع Excel</h3>
+                    <p class="text-gray-600">استيراد البيانات بنقرة واحدة</p>
+                </div>
+                
+                <div class="text-center card-hover bg-gray-50 p-6 rounded-3xl">
+                    <div class="feature-icon bg-purple-500 text-white">
+                        <i class="fas fa-users-cog"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">صلاحيات مرنة</h3>
+                    <p class="text-gray-600">27 صلاحية قابلة للتخصيص</p>
+                </div>
+                
+                <div class="text-center card-hover bg-gray-50 p-6 rounded-3xl">
+                    <div class="feature-icon bg-red-500 text-white">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">نسخ احتياطي</h3>
+                    <p class="text-gray-600">حماية كاملة للبيانات</p>
+                </div>
+                
+                <div class="text-center card-hover bg-gray-50 p-6 rounded-3xl">
+                    <div class="feature-icon bg-yellow-500 text-white">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">يعمل على كل جهاز</h3>
+                    <p class="text-gray-600">كمبيوتر، جوال، تابلت</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-20 px-4 gradient-bg-2">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-5xl font-black text-center text-white mb-4">
+                <i class="fas fa-tags ml-4"></i>
+                الباقات والأسعار
+            </h2>
+            <p class="text-xl text-center text-white mb-16 opacity-90">اختر الباقة المناسبة لمدرستك</p>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Basic Package -->
+                <div class="bg-white rounded-3xl shadow-2xl overflow-hidden card-hover">
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-8 text-center">
+                        <div class="text-5xl mb-4">📦</div>
+                        <h3 class="text-3xl font-black mb-2">الأساسية</h3>
+                        <p class="text-blue-100">للمدارس الصغيرة</p>
+                    </div>
+                    <div class="p-8">
+                        <div class="text-center mb-6">
+                            <div class="text-5xl font-black text-gray-800">4,000</div>
+                            <div class="text-gray-500">ريال / سنوياً</div>
+                            <div class="text-sm text-gray-400 mt-1">أقل من 20 معلم</div>
+                        </div>
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span>التثبيت والإعداد</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span>تدريب 4 ساعات</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span>دعم فني (بريد)</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span>تحديثات مجانية</span>
+                            </li>
+                        </ul>
+                        <button onclick="openQuoteModal('الأساسية')" class="w-full bg-blue-500 text-white py-4 rounded-xl font-bold hover:bg-blue-600 transition-all">
+                            اختر هذه الباقة
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Professional Package (Recommended) -->
+                <div class="bg-white rounded-3xl shadow-2xl overflow-hidden card-hover transform scale-105 border-4 border-yellow-400">
+                    <div class="bg-yellow-400 text-gray-800 py-2 text-center font-bold text-sm">
+                        ⭐ الأكثر طلباً
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-8 text-center">
+                        <div class="text-5xl mb-4">💎</div>
+                        <h3 class="text-3xl font-black mb-2">الاحترافية</h3>
+                        <p class="text-purple-100">للمدارس المتوسطة</p>
+                    </div>
+                    <div class="p-8">
+                        <div class="text-center mb-6">
+                            <div class="text-5xl font-black text-gray-800">10,000</div>
+                            <div class="text-gray-500">ريال / سنوياً</div>
+                            <div class="text-sm text-gray-400 mt-1">20-50 معلم</div>
+                        </div>
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span>كل ما في الأساسية +</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="font-bold">تخصيص الشعار والألوان</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span>تدريب 8 ساعات</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span>دعم (بريد + WhatsApp)</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="font-bold">تقارير مخصصة</span>
+                            </li>
+                        </ul>
+                        <button onclick="openQuoteModal('الاحترافية')" class="w-full bg-purple-600 text-white py-4 rounded-xl font-bold hover:bg-purple-700 transition-all shadow-lg">
+                            اختر هذه الباقة
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Enterprise Package -->
+                <div class="bg-white rounded-3xl shadow-2xl overflow-hidden card-hover">
+                    <div class="bg-gradient-to-br from-red-500 to-pink-600 text-white p-8 text-center">
+                        <div class="text-5xl mb-4">🏆</div>
+                        <h3 class="text-3xl font-black mb-2">المؤسسية</h3>
+                        <p class="text-red-100">للمدارس الكبيرة</p>
+                    </div>
+                    <div class="p-8">
+                        <div class="text-center mb-6">
+                            <div class="text-5xl font-black text-gray-800">مخصص</div>
+                            <div class="text-gray-500">حسب الاحتياجات</div>
+                            <div class="text-sm text-gray-400 mt-1">50+ معلم</div>
+                        </div>
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span>كل ما في الاحترافية +</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="font-bold">تكامل مع أنظمة أخرى</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="font-bold">معايير مخصصة</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span>تدريب شامل</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="font-bold">دعم فوري 24/7</span>
+                            </li>
+                        </ul>
+                        <button onclick="openQuoteModal('المؤسسية')" class="w-full bg-gradient-to-r from-red-500 to-pink-600 text-white py-4 rounded-xl font-bold hover:shadow-xl transition-all">
+                            تواصل معنا
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="py-20 px-4 bg-gradient-to-br from-blue-50 to-purple-50">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-5xl font-black text-center text-gray-800 mb-4">
+                <i class="fas fa-comments text-blue-600 ml-4"></i>
+                ماذا يقول عملاؤنا؟
+            </h2>
+            <p class="text-xl text-center text-gray-600 mb-16">شهادات حقيقية من مدارس استخدمت النظام</p>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-3xl shadow-xl p-8 card-hover relative">
+                    <div class="text-8xl absolute top-4 right-4 text-purple-100 opacity-20">"</div>
+                    <div class="flex items-center mb-4 relative z-10">
+                        <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold ml-4">
+                            أ
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xl">أحمد السعيد</h4>
+                            <p class="text-gray-600">مدير مدرسة</p>
+                        </div>
+                    </div>
+                    <div class="text-yellow-400 mb-3">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="text-gray-700 leading-relaxed">
+                        نظام ممتاز وفّر علينا الكثير من الوقت. التقارير ساعدتنا على اتخاذ قرارات أفضل لتطوير المدرسة.
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-3xl shadow-xl p-8 card-hover relative">
+                    <div class="text-8xl absolute top-4 right-4 text-purple-100 opacity-20">"</div>
+                    <div class="flex items-center mb-4 relative z-10">
+                        <div class="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-bold ml-4">
+                            ف
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xl">فاطمة العتيبي</h4>
+                            <p class="text-gray-600">مشرفة تربوية</p>
+                        </div>
+                    </div>
+                    <div class="text-yellow-400 mb-3">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="text-gray-700 leading-relaxed">
+                        التقارير التفصيلية والمقارنات أصبحت سهلة جداً. النظام احترافي ويحافظ على السرية. ننصح به بشدة!
+                    </p>
+                </div>
+                
+                <div class="bg-white rounded-3xl shadow-xl p-8 card-hover relative">
+                    <div class="text-8xl absolute top-4 right-4 text-purple-100 opacity-20">"</div>
+                    <div class="flex items-center mb-4 relative z-10">
+                        <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white text-2xl font-bold ml-4">
+                            م
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xl">محمد الشمري</h4>
+                            <p class="text-gray-600">معلم رياضيات</p>
+                        </div>
+                    </div>
+                    <div class="text-yellow-400 mb-3">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="text-gray-700 leading-relaxed">
+                        التقييمات ساعدتني على معرفة نقاط قوتي وتطوير نفسي. النظام عادل وشفاف ويساهم في تحسين جودة التعليم.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 px-4 gradient-bg">
+        <div class="max-w-4xl mx-auto text-center text-white">
+            <h2 class="text-5xl md:text-6xl font-black mb-6">
+                <i class="fas fa-rocket ml-4"></i>
+                جاهز للبدء؟
+            </h2>
+            <p class="text-2xl mb-12 leading-relaxed">
+                انضم إلى العشرات من المدارس التي حوّلت تقييم المعلمين إلى تجربة رقمية سلسة
+            </p>
+            <div class="flex flex-wrap gap-4 justify-center">
+                <button onclick="openDemoModal()" class="bg-white text-purple-600 px-10 py-5 rounded-full text-2xl font-black hover:bg-yellow-300 transition-all shadow-2xl">
+                    <i class="fas fa-play ml-2"></i>
+                    احجز عرض توضيحي مجاني
+                </button>
+                <button onclick="openQuoteModal()" class="bg-purple-900/50 backdrop-blur text-white px-10 py-5 rounded-full text-2xl font-bold hover:bg-purple-900 transition-all border-2 border-white/50">
+                    <i class="fas fa-dollar-sign ml-2"></i>
+                    احصل على عرض سعر
+                </button>
+            </div>
+            <p class="mt-8 text-lg opacity-75">
+                <i class="fas fa-phone-alt ml-2"></i>
+                أو اتصل بنا: <span class="font-bold">+966 XXX XXX XXX</span>
+            </p>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 px-4 bg-white">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-5xl font-black text-center text-gray-800 mb-4">
+                <i class="fas fa-phone-alt text-purple-600 ml-4"></i>
+                تواصل معنا
+            </h2>
+            <p class="text-xl text-center text-gray-600 mb-12">نحن هنا للإجابة على جميع استفساراتك</p>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center bg-gradient-to-br from-blue-50 to-purple-50 p-8 rounded-3xl card-hover">
+                    <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">الهاتف</h3>
+                    <p class="text-gray-700 font-bold">+966 XXX XXX XXX</p>
+                    <p class="text-sm text-gray-600 mt-2">الأحد - الخميس<br>9 صباحاً - 5 مساءً</p>
+                </div>
+                
+                <div class="text-center bg-gradient-to-br from-purple-50 to-pink-50 p-8 rounded-3xl card-hover">
+                    <div class="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">البريد الإلكتروني</h3>
+                    <p class="text-gray-700 font-bold">sales@yourcompany.com</p>
+                    <p class="text-sm text-gray-600 mt-2">رد خلال 24 ساعة</p>
+                </div>
+                
+                <div class="text-center bg-gradient-to-br from-green-50 to-teal-50 p-8 rounded-3xl card-hover">
+                    <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4">
+                        <i class="fab fa-whatsapp"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">WhatsApp</h3>
+                    <p class="text-gray-700 font-bold">+966 XXX XXX XXX</p>
+                    <p class="text-sm text-gray-600 mt-2">استجابة سريعة</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12 px-4">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <i class="fas fa-graduation-cap text-4xl text-purple-400"></i>
+                        <h3 class="text-2xl font-black">آفاق المنصورة</h3>
+                    </div>
+                    <p class="text-gray-400">
+                        نظام تقييم المعلمين الإلكتروني الأذكى والأسهل
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="text-xl font-bold mb-4">روابط سريعة</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#features" class="hover:text-purple-400 transition-colors">المميزات</a></li>
+                        <li><a href="#pricing" class="hover:text-purple-400 transition-colors">الأسعار</a></li>
+                        <li><a href="#testimonials" class="hover:text-purple-400 transition-colors">آراء العملاء</a></li>
+                        <li><a href="#contact" class="hover:text-purple-400 transition-colors">اتصل بنا</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-xl font-bold mb-4">الدعم</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-purple-400 transition-colors">المساعدة</a></li>
+                        <li><a href="#" class="hover:text-purple-400 transition-colors">الأسئلة الشائعة</a></li>
+                        <li><a href="#" class="hover:text-purple-400 transition-colors">الشروط والأحكام</a></li>
+                        <li><a href="#" class="hover:text-purple-400 transition-colors">سياسة الخصوصية</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-xl font-bold mb-4">تواصل معنا</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><i class="fas fa-phone ml-2"></i> +966 XXX XXX XXX</li>
+                        <li><i class="fas fa-envelope ml-2"></i> sales@yourcompany.com</li>
+                        <li><i class="fab fa-whatsapp ml-2"></i> +966 XXX XXX XXX</li>
+                    </ul>
+                    <div class="flex gap-4 mt-4">
+                        <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-purple-600 transition-colors">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-purple-600 transition-colors">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-purple-600 transition-colors">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8 text-center text-gray-400">
+                <p>&copy; 2025 آفاق المنصورة. جميع الحقوق محفوظة.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Demo Request Modal -->
+    <div id="demoModal" class="modal">
+        <div class="modal-content">
+            <div class="gradient-bg text-white p-8 rounded-t-3xl">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-3xl font-black">
+                        <i class="fas fa-play ml-2"></i>
+                        احجز عرض توضيحي مجاني
+                    </h3>
+                    <button onclick="closeDemoModal()" class="text-white hover:text-gray-200 text-3xl">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <p class="mt-4 text-lg opacity-90">مدة العرض: 30 دقيقة عبر Zoom</p>
+            </div>
+            
+            <form id="demoForm" class="p-8" onsubmit="submitDemoForm(event)">
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">اسم المدرسة *</label>
+                        <input type="text" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="مثال: مدرسة النور الأهلية">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">اسمك الكامل *</label>
+                        <input type="text" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="مثال: أحمد محمد السعيد">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">المنصب *</label>
+                        <select required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none">
+                            <option value="">اختر المنصب</option>
+                            <option value="مدير">مدير المدرسة</option>
+                            <option value="مشرف">مشرف تربوي</option>
+                            <option value="وكيل">وكيل المدرسة</option>
+                            <option value="مدير إداري">مدير إداري</option>
+                            <option value="آخر">آخر</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">رقم الجوال *</label>
+                        <input type="tel" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="05XXXXXXXX">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">البريد الإلكتروني *</label>
+                        <input type="email" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="your@email.com">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">عدد المعلمين تقريباً</label>
+                        <select class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none">
+                            <option value="">اختر العدد</option>
+                            <option value="أقل من 20">أقل من 20 معلم</option>
+                            <option value="20-50">20-50 معلم</option>
+                            <option value="50-100">50-100 معلم</option>
+                            <option value="أكثر من 100">أكثر من 100 معلم</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">الوقت المفضل للعرض</label>
+                        <select class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none">
+                            <option value="">اختر الوقت</option>
+                            <option value="صباحاً (9-12)">صباحاً (9-12)</option>
+                            <option value="مساءً (2-5)">مساءً (2-5)</option>
+                            <option value="مساءً (5-8)">مساءً (5-8)</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">ملاحظات إضافية</label>
+                        <textarea class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none" rows="3" placeholder="أي استفسارات أو متطلبات خاصة..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-purple-600 text-white py-4 rounded-xl font-bold text-xl hover:bg-purple-700 transition-all shadow-lg">
+                        <i class="fas fa-paper-plane ml-2"></i>
+                        أرسل الطلب
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quote Request Modal -->
+    <div id="quoteModal" class="modal">
+        <div class="modal-content">
+            <div class="gradient-bg-2 text-white p-8 rounded-t-3xl">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-3xl font-black">
+                        <i class="fas fa-dollar-sign ml-2"></i>
+                        احصل على عرض سعر مخصص
+                    </h3>
+                    <button onclick="closeQuoteModal()" class="text-white hover:text-gray-200 text-3xl">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <p class="mt-4 text-lg opacity-90">سنرسل لك عرض سعر مفصل خلال 24 ساعة</p>
+            </div>
+            
+            <form id="quoteForm" class="p-8" onsubmit="submitQuoteForm(event)">
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">اسم المدرسة *</label>
+                        <input type="text" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="مثال: مدرسة النور الأهلية">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">اسمك الكامل *</label>
+                        <input type="text" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="مثال: أحمد محمد السعيد">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">المنصب *</label>
+                        <select required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none">
+                            <option value="">اختر المنصب</option>
+                            <option value="مدير">مدير المدرسة</option>
+                            <option value="مشرف">مشرف تربوي</option>
+                            <option value="وكيل">وكيل المدرسة</option>
+                            <option value="مالك">مالك المدرسة</option>
+                            <option value="مدير إداري">مدير إداري</option>
+                            <option value="آخر">آخر</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">رقم الجوال *</label>
+                        <input type="tel" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="05XXXXXXXX">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">البريد الإلكتروني *</label>
+                        <input type="email" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="your@email.com">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">عدد المعلمين *</label>
+                        <input type="number" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="مثال: 25">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">عدد الطلاب</label>
+                        <input type="number" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none" placeholder="مثال: 500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">الباقة المفضلة *</label>
+                        <select id="packageSelect" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none">
+                            <option value="">اختر الباقة</option>
+                            <option value="الأساسية">الأساسية (4,000 ريال/سنة)</option>
+                            <option value="الاحترافية">الاحترافية (10,000 ريال/سنة)</option>
+                            <option value="المؤسسية">المؤسسية (مخصص)</option>
+                            <option value="غير متأكد">غير متأكد - ساعدوني في الاختيار</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-2">احتياجات خاصة أو ملاحظات</label>
+                        <textarea class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none" rows="3" placeholder="مثال: نحتاج تخصيص معايير تقييم خاصة، تكامل مع نظام نور، إلخ..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-gradient-to-r from-red-500 to-pink-600 text-white py-4 rounded-xl font-bold text-xl hover:shadow-xl transition-all">
+                        <i class="fas fa-paper-plane ml-2"></i>
+                        أرسل طلب عرض السعر
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Modal Functions
+        function openDemoModal() {
+            document.getElementById('demoModal').classList.add('active');
+        }
+        
+        function closeDemoModal() {
+            document.getElementById('demoModal').classList.remove('active');
+        }
+        
+        function openQuoteModal(packageName) {
+            document.getElementById('quoteModal').classList.add('active');
+            if (packageName) {
+                document.getElementById('packageSelect').value = packageName;
+            }
+        }
+        
+        function closeQuoteModal() {
+            document.getElementById('quoteModal').classList.remove('active');
+        }
+        
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const demoModal = document.getElementById('demoModal');
+            const quoteModal = document.getElementById('quoteModal');
+            if (event.target === demoModal) {
+                closeDemoModal();
+            }
+            if (event.target === quoteModal) {
+                closeQuoteModal();
+            }
+        }
+        
+        // Form Submission Functions
+        function submitDemoForm(event) {
+            event.preventDefault();
+            showSuccess('تم إرسال طلب العرض التوضيحي بنجاح! سنتواصل معك خلال 24 ساعة.');
+            closeDemoModal();
+            document.getElementById('demoForm').reset();
+        }
+        
+        function submitQuoteForm(event) {
+            event.preventDefault();
+            showSuccess('تم إرسال طلب عرض السعر بنجاح! سنرسل لك عرضاً مفصلاً خلال 24 ساعة.');
+            closeQuoteModal();
+            document.getElementById('quoteForm').reset();
+        }
+        
+        // Success Message
+        function showSuccess(message) {
+            const successEl = document.getElementById('successMessage');
+            const textEl = document.getElementById('successText');
+            textEl.textContent = message;
+            successEl.style.display = 'block';
+            
+            setTimeout(() => {
+                successEl.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
