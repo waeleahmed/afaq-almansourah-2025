@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عقد ترخيص استخدام نظام تقييم المعلمين الإلكتروني</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+        
+        * {
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 4px solid #667eea;
+        }
+        
+        h2 {
+            color: #764ba2;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        h3 {
+            color: #555;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+        }
+        
+        h4 {
+            color: #666;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        p {
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        
+        ul, ol {
+            line-height: 2;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        strong {
+            color: #667eea;
+            font-weight: 700;
+        }
+        
+        code {
+            background: #f5f5f5;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #e83e8c;
+        }
+        
+        pre {
+            background: #2d3748;
+            color: #f7fafc;
+            padding: 1.5rem;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            text-align: right;
+            font-weight: 700;
+        }
+        
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tr:hover {
+            background: #f7fafc;
+        }
+        
+        blockquote {
+            border-right: 4px solid #667eea;
+            padding-right: 1.5rem;
+            margin: 1.5rem 0;
+            color: #555;
+            font-style: italic;
+            background: #f7fafc;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+        }
+        
+        hr {
+            border: none;
+            border-top: 2px solid #e2e8f0;
+            margin: 2rem 0;
+        }
+        
+        a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        .back-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            text-decoration: none;
+        }
+        
+        .print-button {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            background: #10b981;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .print-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                padding: 1rem;
+            }
+            
+            .back-button,
+            .print-button {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .container {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            table {
+                font-size: 0.875rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-button">← العودة للصفحة الرئيسية</a>
+        <h1>عقد ترخيص استخدام نظام تقييم المعلمين الإلكتروني</h1>
+<h1>Electronic Teacher Evaluation System License Agreement</h1>
+<p><strong>رقم العقد:</strong> [يُملأ عند التوقيع]<br><strong>التاريخ:</strong> [<strong><strong>/</strong></strong>/_<em><strong><strong><strong>هـ] الموافق [</strong></strong>/</strong></em>_/________م]</p>
+<hr>
+<h2>أطراف العقد</h2>
+<p><strong>الطرف الأول (المُرخِّص):</strong></p>
+<ul>
+<li><strong>الاسم:</strong> [اسمك الكامل أو اسم الشركة]</li>
+<li><strong>السجل التجاري:</strong> [رقم السجل] (إن وجد)</li>
+<li><strong>العنوان:</strong> [العنوان الكامل]</li>
+<li><strong>الهاتف:</strong> [رقم الهاتف]</li>
+<li><strong>البريد الإلكتروني:</strong> [البريد الإلكتروني]</li>
+</ul>
+<p><strong>الطرف الثاني (المُرخَّص له - المدرسة):</strong></p>
+<ul>
+<li><strong>اسم المدرسة:</strong> [_______________________________________]</li>
+<li><strong>الترخيص التعليمي:</strong> [_______________________________________]</li>
+<li><strong>العنوان:</strong> [_______________________________________]</li>
+<li><strong>الهاتف:</strong> [_______________________________________]</li>
+<li><strong>البريد الإلكتروني:</strong> [_______________________________________]</li>
+<li><strong>الممثل القانوني:</strong> [_______________________________________]</li>
+<li><strong>المنصب:</strong> [_______________________________________]</li>
+</ul>
+<hr>
+<h2>المادة الأولى: موضوع العقد</h2>
+<p><strong>1.1</strong> يتفق الطرفان على قيام الطرف الأول بتقديم ترخيص استخدام نظام تقييم المعلمين الإلكتروني &quot;<strong>آفاق المنصورة</strong>&quot; (يُشار إليه لاحقًا بـ &quot;<strong>النظام</strong>&quot;) للطرف الثاني، وذلك وفقًا للشروط والأحكام المنصوص عليها في هذا العقد.</p>
+<p><strong>1.2</strong> النظام عبارة عن تطبيق ويب إلكتروني يتيح للطلاب تقييم أداء المعلمين بشكل آمن وسري، مع توفير تقارير تحليلية شاملة للإدارة.</p>
+<p><strong>1.3</strong> يشمل الترخيص:</p>
+<ul>
+<li>✅ نسخة كاملة من البرنامج مُستضافة على Cloudflare Pages</li>
+<li>✅ قاعدة بيانات خاصة بالمدرسة (D1 Database)</li>
+<li>✅ رابط خاص بالمدرسة: <code>https://[school-name].pages.dev</code></li>
+<li>✅ شعار المدرسة وألوانها (حسب الباقة المختارة)</li>
+</ul>
+<hr>
+<h2>المادة الثانية: مدة العقد ونوع الترخيص</h2>
+<p><strong>2.1</strong> نوع الترخيص المُختار: (يُحدد أحد الخيارات التالية)</p>
+<p>☐ <strong>الباقة الأساسية</strong> - ترخيص سنوي قابل للتجديد</p>
+<ul>
+<li>المدة: سنة واحدة من تاريخ التفعيل</li>
+<li>التجديد: تلقائي ما لم يتم الإشعار بالإلغاء قبل 30 يومًا</li>
+</ul>
+<p>☐ <strong>الباقة الاحترافية</strong> - ترخيص سنوي قابل للتجديد</p>
+<ul>
+<li>المدة: سنة واحدة من تاريخ التفعيل</li>
+<li>التجديد: تلقائي ما لم يتم الإشعار بالإلغاء قبل 30 يومًا</li>
+</ul>
+<p>☐ <strong>الباقة المؤسسية</strong> - ترخيص متعدد السنوات</p>
+<ul>
+<li>المدة: [1 / 2 / 3] سنوات من تاريخ التفعيل</li>
+<li>خصم خاص للتعاقدات طويلة المدى</li>
+</ul>
+<p>☐ <strong>ترخيص دائم</strong> - دفعة واحدة</p>
+<ul>
+<li>المدة: دائم (مدى الحياة)</li>
+<li>التحديثات: مجانية لمدة 3 سنوات، ثم مدفوعة</li>
+</ul>
+<p><strong>2.2</strong> تاريخ بدء العقد: [<strong><strong>/</strong></strong>/<strong><strong><strong><strong>]<br><strong>2.3</strong> تاريخ انتهاء العقد: [</strong></strong>/</strong><strong>/</strong>____</strong>]</p>
+<hr>
+<h2>المادة الثالثة: الرسوم والدفع</h2>
+<p><strong>3.1</strong> قيمة الترخيص السنوي:</p>
+<table>
+<thead>
+<tr>
+<th>الباقة</th>
+<th>السعر (ريال سعودي)</th>
+<th>المُختار</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>الأساسية</strong> (&lt;20 معلم)</td>
+<td>4,000 ريال سنويًا</td>
+<td>☐</td>
+</tr>
+<tr>
+<td><strong>الاحترافية</strong> (20-50 معلم)</td>
+<td>10,000 ريال سنويًا</td>
+<td>☐</td>
+</tr>
+<tr>
+<td><strong>المؤسسية</strong> (50+ معلم)</td>
+<td>[يُحدد بالاتفاق]</td>
+<td>☐</td>
+</tr>
+<tr>
+<td><strong>ترخيص دائم</strong></td>
+<td>[3x السعر السنوي]</td>
+<td>☐</td>
+</tr>
+</tbody></table>
+<p><strong>3.2</strong> القيمة الإجمالية المُتفق عليها: <strong>[_____________] ريال سعودي</strong></p>
+<p><strong>3.3</strong> طريقة الدفع: (يُحدد أحد الخيارات)</p>
+<ul>
+<li>☐ دفعة واحدة مقدمة</li>
+<li>☐ دفعتين (50% عند التوقيع، 50% بعد 6 أشهر)</li>
+<li>☐ أربع دفعات ربع سنوية</li>
+<li>☐ أخرى: [_______________________________]</li>
+</ul>
+<p><strong>3.4</strong> طرق الدفع المقبولة:</p>
+<ul>
+<li>✅ حوالة بنكية</li>
+<li>✅ شيك باسم [اسم المُرخِّص]</li>
+<li>✅ نقدًا عند التسليم</li>
+</ul>
+<p><strong>3.5</strong> معلومات الحساب البنكي:</p>
+<ul>
+<li>البنك: [_______________________________]</li>
+<li>رقم الحساب (IBAN): [_______________________________]</li>
+</ul>
+<p><strong>3.6</strong> ضريبة القيمة المضافة (15%): </p>
+<ul>
+<li>☐ مشمولة في السعر المذكور</li>
+<li>☐ تُضاف على السعر المذكور</li>
+</ul>
+<hr>
+<h2>المادة الرابعة: الخدمات المشمولة</h2>
+<p><strong>4.1</strong> التثبيت والإعداد الأولي:</p>
+<ul>
+<li>✅ إنشاء حساب Cloudflare Pages للمدرسة</li>
+<li>✅ إعداد قاعدة بيانات D1 خاصة</li>
+<li>✅ رفع البرنامج ونشره</li>
+<li>✅ اختبار شامل قبل التسليم</li>
+<li>✅ إنشاء حساب مدير النظام الأول</li>
+</ul>
+<p><strong>4.2</strong> التخصيص: (حسب الباقة المُختارة)</p>
+<ul>
+<li>☐ <strong>الأساسية:</strong> لا يشمل تخصيص</li>
+<li>☐ <strong>الاحترافية:</strong> تخصيص الشعار والألوان</li>
+<li>☐ <strong>المؤسسية:</strong> تخصيص كامل + معايير خاصة</li>
+</ul>
+<p><strong>4.3</strong> التدريب:</p>
+<table>
+<thead>
+<tr>
+<th>الباقة</th>
+<th>ساعات التدريب</th>
+<th>الفئة المستهدفة</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>الأساسية</strong></td>
+<td>4 ساعات</td>
+<td>المدراء فقط</td>
+</tr>
+<tr>
+<td><strong>الاحترافية</strong></td>
+<td>8 ساعات</td>
+<td>المدراء + المشرفين</td>
+</tr>
+<tr>
+<td><strong>المؤسسية</strong></td>
+<td>16 ساعة</td>
+<td>جميع المستخدمين</td>
+</tr>
+</tbody></table>
+<ul>
+<li>طريقة التدريب: ☐ عن بُعد (Zoom)  ☐ حضوري  ☐ مُسجل</li>
+</ul>
+<p><strong>4.4</strong> الدعم الفني:</p>
+<table>
+<thead>
+<tr>
+<th>الباقة</th>
+<th>مدة الدعم</th>
+<th>قنوات الدعم</th>
+<th>وقت الاستجابة</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>الأساسية</strong></td>
+<td>سنة واحدة</td>
+<td>بريد إلكتروني</td>
+<td>48 ساعة</td>
+</tr>
+<tr>
+<td><strong>الاحترافية</strong></td>
+<td>سنة واحدة</td>
+<td>بريد + WhatsApp</td>
+<td>24 ساعة</td>
+</tr>
+<tr>
+<td><strong>المؤسسية</strong></td>
+<td>طوال مدة العقد</td>
+<td>بريد + WhatsApp + هاتف</td>
+<td>4 ساعات</td>
+</tr>
+</tbody></table>
+<p><strong>4.5</strong> التحديثات:</p>
+<ul>
+<li>✅ <strong>تحديثات الأمان:</strong> مجانية ومستمرة للجميع</li>
+<li>✅ <strong>تحديثات الميزات:</strong> مجانية خلال فترة الاشتراك</li>
+<li>✅ <strong>الترقيات الكبرى:</strong> قد تتطلب رسوم إضافية (بموافقة مسبقة)</li>
+</ul>
+<p><strong>4.6</strong> النسخ الاحتياطي:</p>
+<ul>
+<li>✅ نسخ احتياطي تلقائي يومي (Cloudflare Time Travel - 30 يوم)</li>
+<li>✅ نسخ احتياطي يدوي غير محدود (JSON Export)</li>
+<li>✅ إمكانية استعادة البيانات في أي وقت</li>
+</ul>
+<hr>
+<h2>المادة الخامسة: التزامات الطرف الأول (المُرخِّص)</h2>
+<p><strong>5.1</strong> يلتزم الطرف الأول بـ:</p>
+<ul>
+<li>✅ تسليم النظام جاهزًا للاستخدام خلال [7] أيام عمل من تاريخ استلام الدفعة الأولى</li>
+<li>✅ تقديم تدريب شامل للمستخدمين حسب الباقة المُختارة</li>
+<li>✅ توفير دعم فني خلال ساعات العمل الرسمية</li>
+<li>✅ إصلاح الأخطاء البرمجية مجانًا</li>
+<li>✅ توفير تحديثات الأمان فور صدورها</li>
+<li>✅ ضمان استمرارية عمل النظام بنسبة 99% (باستثناء صيانة Cloudflare)</li>
+<li>✅ احترام خصوصية بيانات المدرسة</li>
+</ul>
+<p><strong>5.2</strong> لا يتحمل الطرف الأول المسؤولية عن:</p>
+<ul>
+<li>❌ انقطاع الإنترنت لدى المدرسة</li>
+<li>❌ سوء استخدام النظام من قبل المستخدمين</li>
+<li>❌ فقدان البيانات نتيجة عدم أخذ نسخ احتياطية</li>
+<li>❌ مشاكل ناتجة عن تعديلات غير مصرح بها</li>
+</ul>
+<hr>
+<h2>المادة السادسة: التزامات الطرف الثاني (المدرسة)</h2>
+<p><strong>6.1</strong> يلتزم الطرف الثاني بـ:</p>
+<ul>
+<li>✅ دفع الرسوم المُتفق عليها في المواعيد المحددة</li>
+<li>✅ استخدام النظام للأغراض التعليمية فقط</li>
+<li>✅ عدم إعادة بيع أو توزيع أو نسخ النظام</li>
+<li>✅ عدم محاولة فك تشفير الكود المصدري</li>
+<li>✅ أخذ نسخ احتياطية دورية</li>
+<li>✅ الالتزام بقوانين حماية البيانات في المملكة</li>
+<li>✅ الإبلاغ عن أي مشاكل فنية فورًا</li>
+<li>✅ تحديث بيانات الاتصال عند التغيير</li>
+</ul>
+<p><strong>6.2</strong> يحق للمدرسة:</p>
+<ul>
+<li>✅ استخدام النظام لعدد غير محدود من الطلاب والمعلمين</li>
+<li>✅ تصدير البيانات والتقارير</li>
+<li>✅ طلب ميزات إضافية (قد تتطلب رسوم)</li>
+<li>✅ إيقاف الاشتراك قبل التجديد بـ 30 يوم</li>
+</ul>
+<hr>
+<h2>المادة السابعة: الملكية الفكرية وحقوق الاستخدام</h2>
+<p><strong>7.1</strong> حقوق الملكية:</p>
+<ul>
+<li>جميع حقوق الملكية الفكرية للنظام (الكود المصدري، التصميم، العلامة التجارية) تعود بالكامل للطرف الأول</li>
+<li>هذا العقد لا ينقل ملكية، بل يمنح ترخيص استخدام فقط</li>
+</ul>
+<p><strong>7.2</strong> نطاق الترخيص:</p>
+<ul>
+<li>✅ ترخيص <strong>غير حصري</strong> - يحق للطرف الأول ترخيص النظام لمدارس أخرى</li>
+<li>✅ ترخيص <strong>غير قابل للنقل</strong> - لا يحق للمدرسة نقل الترخيص لجهة أخرى</li>
+<li>✅ ترخيص <strong>محدود الاستخدام</strong> - للاستخدام الداخلي في المدرسة فقط</li>
+</ul>
+<p><strong>7.3</strong> القيود:</p>
+<ul>
+<li>❌ يُحظر إعادة البيع التجاري</li>
+<li>❌ يُحظر التعديل على الكود المصدري بدون إذن</li>
+<li>❌ يُحظر إزالة حقوق الملكية من واجهة البرنامج</li>
+<li>❌ يُحظر استخدام النظام خارج نطاق المدرسة</li>
+</ul>
+<hr>
+<h2>المادة الثامنة: خصوصية البيانات والأمان</h2>
+<p><strong>8.1</strong> ملكية البيانات:</p>
+<ul>
+<li>جميع البيانات المُدخلة (طلاب، معلمين، تقييمات) ملك حصري للمدرسة</li>
+<li>لا يحق للطرف الأول الوصول أو استخدام البيانات بدون إذن كتابي</li>
+</ul>
+<p><strong>8.2</strong> حماية البيانات:</p>
+<ul>
+<li>✅ التشفير: جميع البيانات مُشفرة في قاعدة البيانات</li>
+<li>✅ الخصوصية: التقييمات مجهولة المصدر</li>
+<li>✅ الأمان: قاعدة بيانات منفصلة لكل مدرسة</li>
+<li>✅ الامتثال: متوافق مع قوانين حماية البيانات السعودية</li>
+</ul>
+<p><strong>8.3</strong> مسؤولية المدرسة:</p>
+<ul>
+<li>المدرسة مسؤولة عن:<ul>
+<li>✅ الحصول على موافقة أولياء الأمور (إن لزم)</li>
+<li>✅ استخدام البيانات بطريقة أخلاقية</li>
+<li>✅ عدم مشاركة بيانات الدخول</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>المادة التاسعة: الضمانات</h2>
+<p><strong>9.1</strong> يضمن الطرف الأول:</p>
+<ul>
+<li>✅ النظام خالٍ من الأخطاء البرمجية الجوهرية</li>
+<li>✅ النظام يعمل وفق المواصفات المُعلنة</li>
+<li>✅ الاستضافة على Cloudflare موثوقة وآمنة</li>
+</ul>
+<p><strong>9.2</strong> مدة الضمان:</p>
+<ul>
+<li><strong>ضمان شامل:</strong> طوال مدة الاشتراك</li>
+<li><strong>ضمان محدود:</strong> 90 يوم للتراخيص الدائمة (بعدها دعم مدفوع)</li>
+</ul>
+<p><strong>9.3</strong> استثناءات الضمان:</p>
+<ul>
+<li>لا يشمل الضمان الأعطال الناتجة عن:<ul>
+<li>❌ سوء الاستخدام</li>
+<li>❌ تعديلات غير مصرح بها</li>
+<li>❌ مشاكل الإنترنت</li>
+<li>❌ هجمات إلكترونية خارجية</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>المادة العاشرة: إنهاء العقد</h2>
+<p><strong>10.1</strong> إنهاء بالتراضي:</p>
+<ul>
+<li>يمكن إنهاء العقد بموافقة الطرفين كتابيًا</li>
+</ul>
+<p><strong>10.2</strong> إنهاء من قبل المدرسة:</p>
+<ul>
+<li>يحق للمدرسة إلغاء الاشتراك قبل التجديد بـ <strong>30 يوم</strong></li>
+<li>الإلغاء خلال السنة الأولى: لا استرداد للرسوم (ما لم يكن هناك خلل جوهري)</li>
+</ul>
+<p><strong>10.3</strong> إنهاء من قبل المُرخِّص:</p>
+<ul>
+<li>يحق للطرف الأول إنهاء العقد فورًا في الحالات التالية:<ul>
+<li>❌ عدم دفع الرسوم خلال 30 يوم من الاستحقاق</li>
+<li>❌ استخدام النظام بشكل غير قانوني</li>
+<li>❌ محاولة اختراق أو تعديل النظام</li>
+<li>❌ إعادة البيع بدون إذن</li>
+</ul>
+</li>
+</ul>
+<p><strong>10.4</strong> إجراءات الإنهاء:</p>
+<ol>
+<li>إشعار كتابي قبل 14 يوم</li>
+<li>تصدير جميع البيانات (JSON)</li>
+<li>إيقاف الحساب</li>
+<li>حذف البيانات بعد 90 يوم (ما لم تطلب المدرسة غير ذلك)</li>
+</ol>
+<hr>
+<h2>المادة الحادية عشرة: حل النزاعات</h2>
+<p><strong>11.1</strong> التسوية الودية:</p>
+<ul>
+<li>في حالة حدوث أي خلاف، يتم حله بالطرق الودية أولاً</li>
+</ul>
+<p><strong>11.2</strong> التحكيم:</p>
+<ul>
+<li>إذا تعذر الحل الودي، يتم اللجوء للتحكيم وفقًا لنظام التحكيم السعودي</li>
+</ul>
+<p><strong>11.3</strong> الاختصاص القضائي:</p>
+<ul>
+<li>المحاكم المختصة في [المدينة]: [_______________________]</li>
+</ul>
+<hr>
+<h2>المادة الثانية عشرة: أحكام عامة</h2>
+<p><strong>12.1</strong> سريان العقد:</p>
+<ul>
+<li>يسري هذا العقد من تاريخ توقيع الطرفين</li>
+</ul>
+<p><strong>12.2</strong> التعديلات:</p>
+<ul>
+<li>أي تعديل على هذا العقد يجب أن يكون كتابيًا وموقعًا من الطرفين</li>
+</ul>
+<p><strong>12.3</strong> اللغة:</p>
+<ul>
+<li>هذا العقد محرر باللغة العربية، وهي المُعتمدة عند الاختلاف</li>
+</ul>
+<p><strong>12.4</strong> النسخ:</p>
+<ul>
+<li>حُرر هذا العقد من نسختين أصليتين، لكل طرف نسخة</li>
+</ul>
+<p><strong>12.5</strong> الإشعارات:</p>
+<ul>
+<li>جميع الإشعارات تكون كتابيًا على العناوين المذكورة في صدر العقد</li>
+</ul>
+<hr>
+<h2>المادة الثالثة عشرة: ملحقات العقد</h2>
+<p><strong>ملحق أ:</strong> المواصفات الفنية للنظام<br><strong>ملحق ب:</strong> جدول التدريب<br><strong>ملحق ج:</strong> سياسة الدعم الفني<br><strong>ملحق د:</strong> قائمة معايير التقييم الافتراضية</p>
+<p><em>(يُرفق مع العقد)</em></p>
+<hr>
+<h2>التوقيعات</h2>
+<h3>الطرف الأول (المُرخِّص):</h3>
+<p><strong>الاسم:</strong> [<em><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>]<br><strong>المنصب:</strong> [</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></em>]<br><strong>التوقيع:</strong> _______________________________<br><strong>التاريخ:</strong> ______ / ______ / __________<br><strong>الختم:</strong>  </p>
+<hr>
+<h3>الطرف الثاني (المدرسة):</h3>
+<p><strong>الاسم:</strong> [<em><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong><strong>]<br><strong>المنصب:</strong> [</strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></strong></em>]<br><strong>التوقيع:</strong> _______________________________<br><strong>التاريخ:</strong> ______ / ______ / __________<br><strong>الختم:</strong></p>
+<hr>
+<h2>📋 قائمة المراجعة قبل التوقيع</h2>
+<p><strong>على الطرف الثاني التأكد من:</strong></p>
+<ul>
+<li>☐ قراءة جميع البنود بعناية</li>
+<li>☐ فهم نطاق الترخيص والقيود</li>
+<li>☐ مراجعة قيمة الرسوم وطريقة الدفع</li>
+<li>☐ التأكد من مدة العقد وشروط التجديد</li>
+<li>☐ فهم الخدمات المشمولة</li>
+<li>☐ مراجعة سياسة الإلغاء والاسترداد</li>
+<li>☐ الاحتفاظ بنسخة من العقد</li>
+</ul>
+<hr>
+<h2>📞 معلومات الاتصال للاستفسارات</h2>
+<p><strong>للدعم الفني:</strong><br>📧 البريد: <a href="mailto:support@yourcompany.com">support@yourcompany.com</a><br>📱 WhatsApp: +966 XXX XXX XXX</p>
+<p><strong>للمبيعات والاستفسارات:</strong><br>📧 البريد: <a href="mailto:sales@yourcompany.com">sales@yourcompany.com</a><br>📱 الهاتف: +966 XXX XXX XXX</p>
+<p><strong>ساعات العمل:</strong> الأحد - الخميس، 9 صباحًا - 5 مساءً</p>
+<hr>
+<p><strong>✅ تم إعداد هذا العقد وفقًا للأنظمة السعودية</strong><br><strong>📅 آخر تحديث:</strong> ديسمبر 2025<br><strong>📄 الإصدار:</strong> 1.0</p>
+
+    </div>
+    <button class="print-button" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>
+</body>
+</html>

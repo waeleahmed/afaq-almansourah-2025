@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دليل توزيع البرنامج للمدارس الأخرى</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+        
+        * {
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 4px solid #667eea;
+        }
+        
+        h2 {
+            color: #764ba2;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        h3 {
+            color: #555;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+        }
+        
+        h4 {
+            color: #666;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        p {
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        
+        ul, ol {
+            line-height: 2;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        strong {
+            color: #667eea;
+            font-weight: 700;
+        }
+        
+        code {
+            background: #f5f5f5;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #e83e8c;
+        }
+        
+        pre {
+            background: #2d3748;
+            color: #f7fafc;
+            padding: 1.5rem;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            text-align: right;
+            font-weight: 700;
+        }
+        
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tr:hover {
+            background: #f7fafc;
+        }
+        
+        blockquote {
+            border-right: 4px solid #667eea;
+            padding-right: 1.5rem;
+            margin: 1.5rem 0;
+            color: #555;
+            font-style: italic;
+            background: #f7fafc;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+        }
+        
+        hr {
+            border: none;
+            border-top: 2px solid #e2e8f0;
+            margin: 2rem 0;
+        }
+        
+        a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        .back-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            text-decoration: none;
+        }
+        
+        .print-button {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            background: #10b981;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .print-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                padding: 1rem;
+            }
+            
+            .back-button,
+            .print-button {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .container {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            table {
+                font-size: 0.875rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-button">← العودة للصفحة الرئيسية</a>
+        <h1>دليل توزيع البرنامج للمدارس الأخرى</h1>
+<h1>Distribution Guide for Other Schools</h1>
+<p><strong>Program</strong>: Afaq Al-Mansoura - Teacher Evaluation System<br><strong>Version</strong>: 6.3<br><strong>Date</strong>: 2025-12-03</p>
+<hr>
+<h2>🎯 نظرة عامة | Overview</h2>
+<p>هذا الدليل يشرح كيفية توزيع نسخ من البرنامج لمدارس أخرى، سواء للبيع أو الإهداء.</p>
+<p>This guide explains how to distribute copies of the program to other schools, whether for sale or as a gift.</p>
+<hr>
+<h2>📋 خيارات التوزيع | Distribution Options</h2>
+<h3>🎁 الخيار 1: نسخة مجانية (هدية)</h3>
+<p><strong>Option 1: Free Copy (Gift)</strong></p>
+<p>مناسبة للمدارس الشقيقة أو الأصدقاء</p>
+<ul>
+<li>✅ مجانية بالكامل</li>
+<li>✅ نفس الميزات الكاملة</li>
+<li>✅ دعم فني محدود (عبر البريد الإلكتروني)</li>
+</ul>
+<h3>💰 الخيار 2: نسخة تجارية (للبيع)</h3>
+<p><strong>Option 2: Commercial Copy (For Sale)</strong></p>
+<p>مناسبة للمدارس التجارية</p>
+<ul>
+<li>✅ رسوم اشتراك سنوية أو مرة واحدة</li>
+<li>✅ جميع الميزات + تحديثات مجانية</li>
+<li>✅ دعم فني كامل</li>
+<li>✅ تدريب المستخدمين</li>
+</ul>
+<h3>🏢 الخيار 3: نسخة مخصصة (Custom)</h3>
+<p><strong>Option 3: Custom Copy</strong></p>
+<p>مناسبة للمدارس الكبيرة بمتطلبات خاصة</p>
+<ul>
+<li>✅ تخصيص الواجهة والميزات</li>
+<li>✅ إضافة معايير خاصة بالمدرسة</li>
+<li>✅ تكامل مع أنظمة موجودة</li>
+<li>✅ تدريب شامل ودعم مستمر</li>
+</ul>
+<hr>
+<h2>🚀 خطوات إنشاء نسخة جديدة للمدرسة</h2>
+<h2>Steps to Create New School Instance</h2>
+<h3>الطريقة الأولى: نسخة مستقلة (Recommended)</h3>
+<h3>Method 1: Independent Instance (Recommended)</h3>
+<p>كل مدرسة لها:</p>
+<ul>
+<li>قاعدة بيانات D1 منفصلة</li>
+<li>حساب Cloudflare منفصل  </li>
+<li>رابط خاص بها (e.g., school-name.pages.dev)</li>
+</ul>
+<p><strong>المزايا:</strong></p>
+<ul>
+<li>✅ استقلالية كاملة للبيانات</li>
+<li>✅ أمان أعلى</li>
+<li>✅ لا تأثير متبادل بين المدارس</li>
+<li>✅ كل مدرسة تتحكم في حسابها</li>
+</ul>
+<p><strong>الخطوات:</strong></p>
+<h4>1. إنشاء حساب Cloudflare للمدرسة الجديدة</h4>
+<pre><code class="language-bash"># ليس لديك خطوات آلية - يتم يدوياً:
+1. زيارة: https://dash.cloudflare.com/sign-up
+2. إنشاء حساب جديد باسم المدرسة
+3. الحصول على API Token جديد
+</code></pre>
+<h4>2. إعداد المشروع</h4>
+<pre><code class="language-bash"># نسخ الكود الأساسي
+git clone https://github.com/YOUR_USERNAME/afaq-almansourah.git school-name-eval
+cd school-name-eval
+
+# تعديل اسم المشروع
+# Edit wrangler.jsonc
+{
+  &quot;name&quot;: &quot;school-name-eval&quot;,
+  ...
+}
+
+# تثبيت المتطلبات
+npm install
+</code></pre>
+<h4>3. إنشاء قاعدة البيانات</h4>
+<pre><code class="language-bash"># إنشاء قاعدة D1 جديدة
+npx wrangler d1 create school-name-eval-db
+
+# نسخ database_id وتحديث wrangler.jsonc
+{
+  &quot;d1_databases&quot;: [
+    {
+      &quot;binding&quot;: &quot;DB&quot;,
+      &quot;database_name&quot;: &quot;school-name-eval-db&quot;,
+      &quot;database_id&quot;: &quot;PASTE_NEW_DATABASE_ID_HERE&quot;
+    }
+  ]
+}
+
+# تطبيق Migrations
+npx wrangler d1 migrations apply school-name-eval-db
+</code></pre>
+<h4>4. تخصيص البيانات</h4>
+<pre><code class="language-bash"># تعديل ملف public/static/images/logo.png (شعار المدرسة)
+# تعديل اسم المدرسة في public/static/js/app.js
+# البحث عن &quot;آفاق المنصورة&quot; واستبداله بـ &quot;اسم المدرسة الجديدة&quot;
+</code></pre>
+<h4>5. النشر</h4>
+<pre><code class="language-bash"># بناء التطبيق
+npm run build
+
+# النشر على Cloudflare Pages
+npx wrangler pages deploy dist --project-name school-name-eval
+
+# النتيجة:
+# ✅ https://school-name-eval.pages.dev
+</code></pre>
+<h4>6. إضافة مدير النظام الأول</h4>
+<pre><code class="language-bash"># استخدام wrangler لإضافة أول مدير
+npx wrangler d1 execute school-name-eval-db --command=&quot;
+INSERT INTO users (username, password, full_name, user_type, email, phone)
+VALUES (&#39;admin&#39;, &#39;admin123&#39;, &#39;مدير النظام&#39;, &#39;admin&#39;, &#39;admin@school.edu.sa&#39;, &#39;0500000000&#39;);
+&quot;
+
+# أو من داخل التطبيق بعد النشر:
+# زيارة: https://school-name-eval.pages.dev
+# استخدام API /api/init-db إذا كان موجوداً
+</code></pre>
+<hr>
+<h3>الطريقة الثانية: نسخة مشتركة (Multi-tenant)</h3>
+<h3>Method 2: Shared Instance (Multi-tenant)</h3>
+<p><strong>⚠️ Not Recommended for Production</strong></p>
+<p>جميع المدارس على نفس التطبيق ونفس قاعدة البيانات</p>
+<ul>
+<li>كل مدرسة لها <code>school_id</code></li>
+<li>فصل البيانات بالبرمجة فقط</li>
+</ul>
+<p><strong>المزايا:</strong></p>
+<ul>
+<li>✅ إدارة مركزية</li>
+<li>✅ تكلفة أقل</li>
+</ul>
+<p><strong>العيوب:</strong></p>
+<ul>
+<li>❌ أمان أقل</li>
+<li>❌ إذا حدث خطأ يؤثر على الجميع</li>
+<li>❌ صعوبة في التخصيص</li>
+</ul>
+<p><strong>الخطوات:</strong>
+<em>(ليست مفصلة لأنها غير موصى بها للإنتاج)</em></p>
+<hr>
+<h2>📦 حزمة التوزيع | Distribution Package</h2>
+<p>عند توزيع البرنامج، قدّم للمدرسة:</p>
+<h3>ملفات البرنامج:</h3>
+<pre><code>school-evaluation-kit/
+├── README.md                     # دليل البدء السريع
+├── INSTALLATION.md               # دليل التثبيت المفصل
+├── USER_MANUAL.pdf               # دليل المستخدم (PDF)
+├── ADMIN_MANUAL.pdf              # دليل المسؤول (PDF)
+├── source-code/                  # الكود المصدري (إذا كان مسموحاً)
+│   ├── src/
+│   ├── public/
+│   ├── migrations/
+│   ├── package.json
+│   ├── wrangler.jsonc
+│   └── ...
+├── templates/                    # قوالب Excel
+│   ├── students_template.xlsx
+│   └── teachers_template.xlsx
+└── support/                      # ملفات الدعم
+    ├── video-tutorials/          # فيديوهات تعليمية
+    ├── troubleshooting.md        # حل المشاكل الشائعة
+    └── contact-info.txt          # معلومات الاتصال للدعم
+</code></pre>
+<h3>الخدمات المرفقة:</h3>
+<h4>🆓 للنسخ المجانية:</h4>
+<ul>
+<li>✅ الكود المصدري الكامل</li>
+<li>✅ دليل التثبيت المفصل</li>
+<li>✅ دعم فني عبر البريد (3 شهور)</li>
+<li>✅ قوالب Excel جاهزة</li>
+</ul>
+<h4>💰 للنسخ التجارية:</h4>
+<ul>
+<li>✅ كل ما سبق +</li>
+<li>✅ تثبيت وإعداد كامل</li>
+<li>✅ تدريب المستخدمين (عن بُعد أو حضورياً)</li>
+<li>✅ دعم فني لمدة سنة</li>
+<li>✅ تحديثات مجانية لمدة سنة</li>
+<li>✅ تخصيص الشعار والألوان</li>
+<li>✅ إضافة معايير خاصة (إذا لزم)</li>
+</ul>
+<hr>
+<h2>💼 نموذج العقد التجاري | Commercial Contract Template</h2>
+<h3>اتفاقية استخدام نظام تقييم المعلمين</h3>
+<p><strong>الطرف الأول:</strong> [اسم مالك البرنامج]<br><strong>الطرف الثاني:</strong> [اسم المدرسة المستفيدة]<br><strong>التاريخ:</strong> [التاريخ]</p>
+<h4>البنود:</h4>
+<ol>
+<li><p><strong>موضوع العقد:</strong></p>
+<ul>
+<li>تقديم نظام تقييم المعلمين الإلكتروني للطرف الثاني</li>
+</ul>
+</li>
+<li><p><strong>مدة الترخيص:</strong></p>
+<ul>
+<li>[☐] سنة واحدة قابلة للتجديد</li>
+<li>[☐] ترخيص دائم (مرة واحدة)</li>
+</ul>
+</li>
+<li><p><strong>الرسوم:</strong></p>
+<ul>
+<li>المبلغ: [____] ريال سعودي</li>
+<li>الدفع: [☐] مقدماً  [☐] شهرياً  [☐] سنوياً</li>
+</ul>
+</li>
+<li><p><strong>الخدمات المشمولة:</strong></p>
+<ul>
+<li>[✅] التثبيت والإعداد</li>
+<li>[✅] التدريب: [عدد الساعات]</li>
+<li>[✅] الدعم الفني: [المدة]</li>
+<li>[✅] التحديثات: [المدة]</li>
+<li>[✅] التخصيص: [الحد المسموح]</li>
+</ul>
+</li>
+<li><p><strong>التزامات الطرف الأول:</strong></p>
+<ul>
+<li>تقديم الدعم الفني خلال المدة المتفق عليها</li>
+<li>إصلاح الأخطاء البرمجية</li>
+<li>توفير التحديثات الأمنية</li>
+</ul>
+</li>
+<li><p><strong>التزامات الطرف الثاني:</strong></p>
+<ul>
+<li>دفع الرسوم المتفق عليها</li>
+<li>عدم إعادة توزيع البرنامج</li>
+<li>استخدام البرنامج فقط داخل المدرسة</li>
+</ul>
+</li>
+<li><p><strong>الملكية الفكرية:</strong></p>
+<ul>
+<li>حقوق البرنامج تبقى للطرف الأول</li>
+<li>الطرف الثاني لديه حق الاستخدام فقط</li>
+</ul>
+</li>
+</ol>
+<p><strong>التوقيعات:</strong></p>
+<p>الطرف الأول: ______________<br>التاريخ: ______________</p>
+<p>الطرف الثاني: ______________<br>التاريخ: ______________</p>
+<hr>
+<h2>🛠️ إعداد الدعم الفني | Technical Support Setup</h2>
+<h3>قنوات الدعم الموصى بها:</h3>
+<ol>
+<li><p><strong>البريد الإلكتروني:</strong></p>
+<ul>
+<li><a href="mailto:support@yourdomain.com">support@yourdomain.com</a></li>
+<li>وقت الرد: خلال 24-48 ساعة</li>
+</ul>
+</li>
+<li><p><strong>WhatsApp Business:</strong></p>
+<ul>
+<li>رقم مخصص للدعم الفني</li>
+<li>ساعات العمل: 9 صباحاً - 5 مساءً</li>
+</ul>
+</li>
+<li><p><strong>نظام Tickets:</strong></p>
+<ul>
+<li>استخدام منصة مثل Zendesk أو Freshdesk</li>
+<li>تتبع المشاكل والحلول</li>
+</ul>
+</li>
+<li><p><strong>قاعدة معرفة:</strong></p>
+<ul>
+<li>موقع إلكتروني بالأسئلة الشائعة</li>
+<li>فيديوهات تعليمية على YouTube</li>
+<li>مستندات تفصيلية</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2>🔄 التحديثات | Updates &amp; Maintenance</h2>
+<h3>سياسة التحديثات:</h3>
+<h4>التحديثات الأمنية (Security Updates):</h4>
+<ul>
+<li><strong>مجانية للجميع</strong></li>
+<li>إشعار فوري عند توفرها</li>
+<li>توضيح خطورة عدم التحديث</li>
+</ul>
+<h4>التحديثات الوظيفية (Feature Updates):</h4>
+<ul>
+<li><strong>مجانية</strong> للنسخ التجارية (ضمن فترة الاشتراك)</li>
+<li><strong>مدفوعة</strong> للنسخ المجانية (اختياري)</li>
+</ul>
+<h4>الترقيات الكبرى (Major Upgrades):</h4>
+<ul>
+<li>قد تتطلب رسوم إضافية</li>
+<li>إشعار مسبق قبل 3 أشهر</li>
+</ul>
+<h3>كيفية تطبيق التحديث:</h3>
+<pre><code class="language-bash"># للمدارس التي تدير نسخها بنفسها:
+cd school-eval-project
+git pull origin main
+npm install
+npm run build
+npx wrangler pages deploy dist --project-name school-name-eval
+
+# للمدارس التي نديرها لهم:
+# نقوم نحن بالتحديث بعد أخذ موافقتهم
+</code></pre>
+<hr>
+<h2>📊 التسعير المقترح | Suggested Pricing</h2>
+<h3>🎁 النسخة المجانية (هدية):</h3>
+<ul>
+<li><strong>السعر:</strong> 0 ريال</li>
+<li><strong>المناسبة:</strong> مدارس خيرية، أصدقاء</li>
+<li><strong>الدعم:</strong> بريد إلكتروني فقط (3 شهور)</li>
+</ul>
+<h3>💼 النسخة الأساسية:</h3>
+<ul>
+<li><strong>السعر:</strong> 3,000 - 5,000 ريال سنوياً</li>
+<li><strong>المناسبة:</strong> مدارس صغيرة (أقل من 20 معلم)</li>
+<li><strong>يشمل:</strong><ul>
+<li>التثبيت والإعداد</li>
+<li>تدريب 4 ساعات</li>
+<li>دعم سنة كاملة</li>
+<li>تحديثات سنة</li>
+</ul>
+</li>
+</ul>
+<h3>💎 النسخة الاحترافية:</h3>
+<ul>
+<li><strong>السعر:</strong> 8,000 - 12,000 ريال سنوياً</li>
+<li><strong>المناسبة:</strong> مدارس متوسطة (20-50 معلم)</li>
+<li><strong>يشمل:</strong><ul>
+<li>كل ما في الأساسية +</li>
+<li>تخصيص الشعار والألوان</li>
+<li>تدريب 8 ساعات</li>
+<li>دعم أولوية</li>
+<li>تقارير مخصصة</li>
+</ul>
+</li>
+</ul>
+<h3>🏆 النسخة المؤسسية:</h3>
+<ul>
+<li><strong>السعر:</strong> يحدد بالاتفاق (15,000+ ريال سنوياً)</li>
+<li><strong>المناسبة:</strong> مدارس كبيرة (50+ معلم) أو مجموعات مدارس</li>
+<li><strong>يشمل:</strong><ul>
+<li>كل ما في الاحترافية +</li>
+<li>تكامل مع أنظمة أخرى</li>
+<li>معايير تقييم مخصصة</li>
+<li>تدريب شامل لجميع المستخدمين</li>
+<li>دعم فوري (24/7 للحالات الحرجة)</li>
+<li>مدير حساب مخصص</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>🎓 التدريب | Training Program</h2>
+<h3>📚 برنامج تدريب المستخدمين:</h3>
+<h4>للمدراء (Administrators) - 4 ساعات:</h4>
+<ol>
+<li><p><strong>الجلسة 1 (ساعة):</strong> مقدمة وإعداد النظام</p>
+<ul>
+<li>فهم واجهة لوحة التحكم</li>
+<li>إضافة المعلمين والطلاب</li>
+<li>تخصيص المعايير</li>
+</ul>
+</li>
+<li><p><strong>الجلسة 2 (ساعة):</strong> إدارة المستخدمين والصلاحيات</p>
+<ul>
+<li>إنشاء حسابات المدراء والمشرفين</li>
+<li>تحديد الصلاحيات</li>
+<li>إدارة كلمات المرور</li>
+</ul>
+</li>
+<li><p><strong>الجلسة 3 (ساعة):</strong> التقارير والتحليلات</p>
+<ul>
+<li>عرض التقارير المختلفة</li>
+<li>تحليل نقاط القوة والضعف</li>
+<li>تصدير البيانات</li>
+</ul>
+</li>
+<li><p><strong>الجلسة 4 (ساعة):</strong> النسخ الاحتياطي وحل المشاكل</p>
+<ul>
+<li>إنشاء نسخ احتياطية</li>
+<li>استعادة البيانات</li>
+<li>حل المشاكل الشائعة</li>
+</ul>
+</li>
+</ol>
+<h4>للطلاب (Students) - ساعة واحدة:</h4>
+<ol>
+<li>تسجيل الدخول</li>
+<li>اختيار المعلم</li>
+<li>ملء استمارة التقييم</li>
+<li>التأكيد والإرسال</li>
+</ol>
+<h4>للمعلمين (Teachers) - نصف ساعة:</h4>
+<ol>
+<li>فهم عملية التقييم</li>
+<li>كيفية عرض نتائجهم (إن كان مسموحاً)</li>
+<li>تفسير التقارير</li>
+</ol>
+<hr>
+<h2>📞 معلومات الاتصال | Contact Information</h2>
+<h3>للدعم الفني والاستفسارات:</h3>
+<p><strong>البريد الإلكتروني:</strong> <a href="mailto:support@yourdomain.com">support@yourdomain.com</a><br><strong>الهاتف/WhatsApp:</strong> +966 XXX XXX XXX<br><strong>الموقع:</strong> <a href="https://yourdomain.com">https://yourdomain.com</a><br><strong>ساعات العمل:</strong> الأحد - الخميس، 9 صباحاً - 5 مساءً</p>
+<h3>للطلبات التجارية:</h3>
+<p><strong>البريد الإلكتروني:</strong> <a href="mailto:sales@yourdomain.com">sales@yourdomain.com</a><br><strong>الهاتف:</strong> +966 XXX XXX XXX</p>
+<hr>
+<h2>⚖️ الشروط والأحكام | Terms &amp; Conditions</h2>
+<h3>شروط الاستخدام:</h3>
+<ol>
+<li><p><strong>الترخيص:</strong></p>
+<ul>
+<li>ترخيص استخدام، وليس نقل ملكية</li>
+<li>لا يحق إعادة البيع أو التوزيع</li>
+<li>الاستخدام محصور في المدرسة المرخصة</li>
+</ul>
+</li>
+<li><p><strong>الخصوصية:</strong></p>
+<ul>
+<li>بيانات المدرسة خاصة بها فقط</li>
+<li>لا نشارك البيانات مع أطراف ثالثة</li>
+<li>يجب على المدرسة الالتزام بقوانين حماية البيانات</li>
+</ul>
+</li>
+<li><p><strong>المسؤولية:</strong></p>
+<ul>
+<li>نضمن عمل البرنامج حسب المواصفات</li>
+<li>لا نتحمل مسؤولية سوء الاستخدام</li>
+<li>يجب أخذ نسخ احتياطية دورية</li>
+</ul>
+</li>
+<li><p><strong>الإلغاء:</strong></p>
+<ul>
+<li>يمكن إلغاء الاشتراك قبل التجديد بـ 30 يوم</li>
+<li>الرسوم المدفوعة غير قابلة للاسترداد</li>
+<li>يتم إيقاف الدعم الفني بعد الإلغاء</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2>🌟 نصائح للنجاح | Success Tips</h2>
+<h3>لضمان نجاح التطبيق في المدرسة الجديدة:</h3>
+<ol>
+<li><p><strong>الإعداد الجيد:</strong></p>
+<ul>
+<li>✅ خذ وقتك في الإعداد الأولي</li>
+<li>✅ تأكد من صحة البيانات المُدخلة</li>
+<li>✅ اختبر النظام قبل الإطلاق الرسمي</li>
+</ul>
+</li>
+<li><p><strong>التدريب الشامل:</strong></p>
+<ul>
+<li>✅ درّب جميع المستخدمين</li>
+<li>✅ وفّر أدلة مكتوبة</li>
+<li>✅ عيّن شخص مسؤول عن النظام</li>
+</ul>
+</li>
+<li><p><strong>التواصل الواضح:</strong></p>
+<ul>
+<li>✅ اشرح أهمية التقييم للطلاب</li>
+<li>✅ وضّح للمعلمين أن الهدف هو التحسين</li>
+<li>✅ احصل على دعم الإدارة</li>
+</ul>
+</li>
+<li><p><strong>المتابعة المستمرة:</strong></p>
+<ul>
+<li>✅ راجع التقارير بانتظام</li>
+<li>✅ استمع لملاحظات المستخدمين</li>
+<li>✅ حدّث النظام عند توفر تحديثات</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2>📝 خاتمة | Conclusion</h2>
+<p>هذا الدليل يوفر إطار عمل كامل لتوزيع البرنامج للمدارس الأخرى. يمكنك تخصيصه حسب احتياجاتك وظروفك.</p>
+<p><strong>تذكّر:</strong></p>
+<ul>
+<li>🎯 ركّز على رضا العميل</li>
+<li>💯 قدّم دعم فني ممتاز</li>
+<li>📊 اطلب ردود الفعل باستمرار</li>
+<li>🚀 حسّن المنتج بناءً على الملاحظات</li>
+</ul>
+<p><strong>حظاً موفقاً في مشروعك! 🌟</strong></p>
+<hr>
+<p><strong>التحديث الأخير:</strong> 2025-12-03<br><strong>الإصدار:</strong> 6.3<br><strong>المؤلف:</strong> Afaq Al-Mansoura Development Team</p>
+
+    </div>
+    <button class="print-button" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>
+</body>
+</html>
