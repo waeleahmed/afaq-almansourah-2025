@@ -241,7 +241,7 @@ const htmlTemplate = (title, content) => `<!DOCTYPE html>
 </head>
 <body>
     <div class="container">
-        <a href="/" class="back-button">← العودة للصفحة الرئيسية</a>
+        <a href="/public/index.html" class="back-button">← العودة للصفحة الرئيسية</a>
         ${content}
     </div>
     <button class="print-button" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>
