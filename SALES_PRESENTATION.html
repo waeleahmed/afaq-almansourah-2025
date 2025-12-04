@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>آفاق المنصورة - نظام تقييم المعلمين الإلكتروني</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+        
+        * {
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        .slide {
+            min-height: 100vh;
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        .slide.active {
+            display: flex;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .gradient-bg-2 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .gradient-bg-3 {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #e5e7eb;
+            z-index: 1000;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+        
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 1rem;
+        }
+        
+        .price-card {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .price-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            transition: all 0.6s ease;
+        }
+        
+        .price-card:hover::before {
+            top: -60%;
+            right: -60%;
+        }
+        
+        .testimonial {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .testimonial::before {
+            content: '"';
+            position: absolute;
+            top: -20px;
+            right: 20px;
+            font-size: 80px;
+            color: #667eea;
+            opacity: 0.2;
+            font-family: Georgia, serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Progress Bar -->
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+    </div>
+
+    <!-- Navigation Controls -->
+    <div class="fixed bottom-8 left-0 right-0 flex justify-center items-center gap-4 z-50">
+        <button onclick="previousSlide()" class="bg-white text-purple-600 px-6 py-3 rounded-full shadow-lg hover:bg-purple-50 transition-all">
+            <i class="fas fa-arrow-right"></i> السابق
+        </button>
+        <div id="slideIndicator" class="bg-white px-6 py-3 rounded-full shadow-lg font-bold text-purple-600">
+            1 / 12
+        </div>
+        <button onclick="nextSlide()" class="bg-purple-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-purple-700 transition-all">
+            التالي <i class="fas fa-arrow-left"></i>
+        </button>
+    </div>
+
+    <!-- Slide 1: Cover -->
+    <div class="slide active gradient-bg items-center justify-center p-8">
+        <div class="text-center text-white">
+            <div class="pulse-animation">
+                <i class="fas fa-graduation-cap text-9xl mb-8"></i>
+            </div>
+            <h1 class="text-7xl font-black mb-6">آفاق المنصورة</h1>
+            <h2 class="text-4xl font-bold mb-8">نظام تقييم المعلمين الإلكتروني</h2>
+            <p class="text-2xl mb-12 opacity-90">الحل الذكي لتقييم الأداء التعليمي</p>
+            <div class="flex gap-6 justify-center text-lg">
+                <div class="bg-white/20 backdrop-blur px-6 py-3 rounded-full">
+                    <i class="fas fa-check-circle ml-2"></i>
+                    سهل الاستخدام
+                </div>
+                <div class="bg-white/20 backdrop-blur px-6 py-3 rounded-full">
+                    <i class="fas fa-shield-alt ml-2"></i>
+                    آمن ومشفر
+                </div>
+                <div class="bg-white/20 backdrop-blur px-6 py-3 rounded-full">
+                    <i class="fas fa-chart-line ml-2"></i>
+                    تقارير تحليلية
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 2: Problem -->
+    <div class="slide items-center justify-center p-16 bg-gradient-to-br from-red-50 to-orange-50">
+        <div class="max-w-6xl w-full">
+            <h2 class="text-5xl font-black text-gray-800 mb-12 text-center">
+                <i class="fas fa-exclamation-triangle text-red-500 ml-4"></i>
+                ما هي التحديات التي تواجهها؟
+            </h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-8 rounded-3xl shadow-xl card-hover">
+                    <div class="text-6xl mb-4">📝</div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">التقييم الورقي التقليدي</h3>
+                    <ul class="space-y-3 text-gray-600 text-lg">
+                        <li><i class="fas fa-times text-red-500 ml-2"></i> يستهلك الوقت والجهد</li>
+                        <li><i class="fas fa-times text-red-500 ml-2"></i> صعوبة في التحليل والاستنتاج</li>
+                        <li><i class="fas fa-times text-red-500 ml-2"></i> إمكانية الضياع أو التلف</li>
+                        <li><i class="fas fa-times text-red-500 ml-2"></i> لا يوفر تقارير فورية</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-8 rounded-3xl shadow-xl card-hover">
+                    <div class="text-6xl mb-4">🔒</div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">عدم السرية والخصوصية</h3>
+                    <ul class="space-y-3 text-gray-600 text-lg">
+                        <li><i class="fas fa-times text-red-500 ml-2"></i> قلق الطلاب من معرفة هويتهم</li>
+                        <li><i class="fas fa-times text-red-500 ml-2"></i> تأثير على صدق الإجابات</li>
+                        <li><i class="fas fa-times text-red-500 ml-2"></i> صعوبة في ضمان الخصوصية</li>
+                        <li><i class="fas fa-times text-red-500 ml-2"></i> عدم الثقة في النظام</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-8 rounded-3xl shadow-xl card-hover">
+                    <div class="text-6xl mb-4">📊</div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">عدم وجود تقارير تحليلية</h3>
+                    <ul class="space-y-3 text-gray-600 text-lg">
+                        <li><i class="fas fa-times text-red-500 ml-2"></i> صعوبة المقارنة بين المعلمين</li>
+                        <li><i class="fas fa-times text-red-500 ml-2"></i> لا توجد مؤشرات قياس واضحة</li>
+                        <li><i class="fas fa-times text-red-500 ml-2"></i> عدم معرفة نقاط القوة والضعف</li>
+                        <li><i class="fas fa-times text-red-500 ml-2"></i> قرارات غير مبنية على بيانات</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-8 rounded-3xl shadow-xl card-hover">
+                    <div class="text-6xl mb-4">💰</div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">التكلفة العالية</h3>
+                    <ul class="space-y-3 text-gray-600 text-lg">
+                        <li><i class="fas fa-times text-red-500 ml-2"></i> تكلفة الطباعة المستمرة</li>
+                        <li><i class="fas fa-times text-red-500 ml-2"></i> استهلاك موارد بشرية</li>
+                        <li><i class="fas fa-times text-red-500 ml-2"></i> وقت طويل للمعالجة</li>
+                        <li><i class="fas fa-times text-red-500 ml-2"></i> عدم الكفاءة</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: Solution -->
+    <div class="slide items-center justify-center p-16 gradient-bg-3">
+        <div class="max-w-6xl w-full text-white">
+            <h2 class="text-6xl font-black mb-12 text-center">
+                <i class="fas fa-lightbulb text-yellow-300 ml-4"></i>
+                الحل: آفاق المنصورة
+            </h2>
+            <div class="bg-white/10 backdrop-blur-lg rounded-3xl p-12 text-center">
+                <p class="text-3xl leading-relaxed mb-8">
+                    نظام إلكتروني <span class="font-black text-yellow-300">متكامل</span> يوفر تجربة تقييم 
+                    <span class="font-black text-yellow-300">سلسة</span> و
+                    <span class="font-black text-yellow-300">آمنة</span> و
+                    <span class="font-black text-yellow-300">ذكية</span>
+                </p>
+                <div class="grid md:grid-cols-3 gap-6 mt-12">
+                    <div class="bg-white/20 p-6 rounded-2xl">
+                        <div class="text-5xl mb-4">⚡</div>
+                        <h3 class="text-2xl font-bold mb-2">سرعة</h3>
+                        <p class="text-lg">تقييم كامل في 5 دقائق</p>
+                    </div>
+                    <div class="bg-white/20 p-6 rounded-2xl">
+                        <div class="text-5xl mb-4">🔐</div>
+                        <h3 class="text-2xl font-bold mb-2">أمان</h3>
+                        <p class="text-lg">تشفير كامل للبيانات</p>
+                    </div>
+                    <div class="bg-white/20 p-6 rounded-2xl">
+                        <div class="text-5xl mb-4">📈</div>
+                        <h3 class="text-2xl font-bold mb-2">ذكاء</h3>
+                        <p class="text-lg">تقارير تحليلية فورية</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Features -->
+    <div class="slide items-center justify-center p-16 bg-gray-50">
+        <div class="max-w-7xl w-full">
+            <h2 class="text-5xl font-black text-gray-800 mb-16 text-center">
+                <i class="fas fa-star text-yellow-500 ml-4"></i>
+                المميزات الرئيسية
+            </h2>
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="text-center">
+                    <div class="feature-icon gradient-bg text-white">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">واجهة سهلة</h3>
+                    <p class="text-gray-600">تصميم بسيط يناسب جميع الأعمار</p>
+                </div>
+                <div class="text-center">
+                    <div class="feature-icon gradient-bg-2 text-white">
+                        <i class="fas fa-user-secret"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">سرية تامة</h3>
+                    <p class="text-gray-600">التقييمات مجهولة المصدر</p>
+                </div>
+                <div class="text-center">
+                    <div class="feature-icon gradient-bg-3 text-white">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">تقارير ذكية</h3>
+                    <p class="text-gray-600">رسوم بيانية ومقارنات شاملة</p>
+                </div>
+                <div class="text-center">
+                    <div class="feature-icon bg-green-500 text-white">
+                        <i class="fas fa-file-excel"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">رفع Excel</h3>
+                    <p class="text-gray-600">استيراد البيانات بنقرة واحدة</p>
+                </div>
+                <div class="text-center">
+                    <div class="feature-icon bg-blue-500 text-white">
+                        <i class="fas fa-users-cog"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">إدارة الصلاحيات</h3>
+                    <p class="text-gray-600">27 صلاحية قابلة للتخصيص</p>
+                </div>
+                <div class="text-center">
+                    <div class="feature-icon bg-purple-500 text-white">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">نسخ احتياطي</h3>
+                    <p class="text-gray-600">حماية كاملة للبيانات</p>
+                </div>
+                <div class="text-center">
+                    <div class="feature-icon bg-red-500 text-white">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Time Travel</h3>
+                    <p class="text-gray-600">استعادة البيانات لأي تاريخ</p>
+                </div>
+                <div class="text-center">
+                    <div class="feature-icon bg-yellow-500 text-white">
+                        <i class="fas fa-sliders-h"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">معايير مرنة</h3>
+                    <p class="text-gray-600">تخصيص معايير التقييم</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Screenshots -->
+    <div class="slide items-center justify-center p-16 bg-gradient-to-br from-purple-50 to-blue-50">
+        <div class="max-w-6xl w-full">
+            <h2 class="text-5xl font-black text-gray-800 mb-12 text-center">
+                <i class="fas fa-desktop text-purple-600 ml-4"></i>
+                جولة في النظام
+            </h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-3xl shadow-2xl overflow-hidden card-hover">
+                    <div class="bg-gradient-to-r from-purple-500 to-blue-500 p-6 text-white">
+                        <h3 class="text-2xl font-bold"><i class="fas fa-tachometer-alt ml-2"></i> لوحة التحكم</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="bg-gray-100 rounded-xl h-64 flex items-center justify-center text-gray-400">
+                            <div class="text-center">
+                                <i class="fas fa-chart-pie text-6xl mb-4"></i>
+                                <p class="text-xl">إحصائيات شاملة وواضحة</p>
+                                <p class="text-sm mt-2">عدد الطلاب - المعلمين - التقييمات</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-3xl shadow-2xl overflow-hidden card-hover">
+                    <div class="bg-gradient-to-r from-green-500 to-teal-500 p-6 text-white">
+                        <h3 class="text-2xl font-bold"><i class="fas fa-edit ml-2"></i> نموذج التقييم</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="bg-gray-100 rounded-xl h-64 flex items-center justify-center text-gray-400">
+                            <div class="text-center">
+                                <i class="fas fa-star text-6xl mb-4"></i>
+                                <p class="text-xl">تقييم تفاعلي سهل</p>
+                                <p class="text-sm mt-2">⭐⭐⭐⭐⭐ من 1 إلى 5</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-3xl shadow-2xl overflow-hidden card-hover">
+                    <div class="bg-gradient-to-r from-red-500 to-pink-500 p-6 text-white">
+                        <h3 class="text-2xl font-bold"><i class="fas fa-chart-line ml-2"></i> التقارير</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="bg-gray-100 rounded-xl h-64 flex items-center justify-center text-gray-400">
+                            <div class="text-center">
+                                <i class="fas fa-chart-bar text-6xl mb-4"></i>
+                                <p class="text-xl">رسوم بيانية احترافية</p>
+                                <p class="text-sm mt-2">مقارنات - ترتيب - نقاط القوة/الضعف</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-3xl shadow-2xl overflow-hidden card-hover">
+                    <div class="bg-gradient-to-r from-yellow-500 to-orange-500 p-6 text-white">
+                        <h3 class="text-2xl font-bold"><i class="fas fa-cog ml-2"></i> الإعدادات</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="bg-gray-100 rounded-xl h-64 flex items-center justify-center text-gray-400">
+                            <div class="text-center">
+                                <i class="fas fa-sliders-h text-6xl mb-4"></i>
+                                <p class="text-xl">تحكم كامل</p>
+                                <p class="text-sm mt-2">معايير مخصصة - صلاحيات - نسخ احتياطي</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 6: Benefits -->
+    <div class="slide items-center justify-center p-16 gradient-bg">
+        <div class="max-w-6xl w-full text-white">
+            <h2 class="text-5xl font-black mb-16 text-center">
+                <i class="fas fa-trophy text-yellow-300 ml-4"></i>
+                لماذا آفاق المنصورة؟
+            </h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8">
+                    <div class="text-5xl mb-4">💎</div>
+                    <h3 class="text-2xl font-bold mb-4">للإدارة المدرسية</h3>
+                    <ul class="space-y-3 text-lg">
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> قرارات مبنية على بيانات دقيقة</li>
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> توفير الوقت والجهد</li>
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> تحسين جودة التعليم</li>
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> شفافية وموضوعية</li>
+                    </ul>
+                </div>
+                <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8">
+                    <div class="text-5xl mb-4">👨‍🏫</div>
+                    <h3 class="text-2xl font-bold mb-4">للمعلمين</h3>
+                    <ul class="space-y-3 text-lg">
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> معرفة نقاط القوة للتعزيز</li>
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> اكتشاف نقاط الضعف للتحسين</li>
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> تطوير مهني مستمر</li>
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> تحفيز ومكافآت عادلة</li>
+                    </ul>
+                </div>
+                <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8">
+                    <div class="text-5xl mb-4">🎓</div>
+                    <h3 class="text-2xl font-bold mb-4">للطلاب</h3>
+                    <ul class="space-y-3 text-lg">
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> التعبير عن رأيهم بحرية</li>
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> المساهمة في تحسين التعليم</li>
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> سهولة وسرعة الاستخدام</li>
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> خصوصية مضمونة</li>
+                    </ul>
+                </div>
+                <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-8">
+                    <div class="text-5xl mb-4">🏫</div>
+                    <h3 class="text-2xl font-bold mb-4">للمدرسة</h3>
+                    <ul class="space-y-3 text-lg">
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> تحسين السمعة والجودة</li>
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> تقليل التكاليف التشغيلية</li>
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> التحول الرقمي</li>
+                        <li><i class="fas fa-check-circle text-green-300 ml-2"></i> ميزة تنافسية</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7: Technical Specs -->
+    <div class="slide items-center justify-center p-16 bg-gray-50">
+        <div class="max-w-6xl w-full">
+            <h2 class="text-5xl font-black text-gray-800 mb-12 text-center">
+                <i class="fas fa-cogs text-blue-600 ml-4"></i>
+                المواصفات التقنية
+            </h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-3xl shadow-xl p-8 text-center card-hover">
+                    <div class="text-5xl mb-4">☁️</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">سحابة عالمية</h3>
+                    <p class="text-gray-600 mb-4">استضافة على Cloudflare Pages</p>
+                    <div class="text-sm text-gray-500 space-y-2">
+                        <div><i class="fas fa-check text-green-500 ml-1"></i> سرعة فائقة</div>
+                        <div><i class="fas fa-check text-green-500 ml-1"></i> أمان عالي</div>
+                        <div><i class="fas fa-check text-green-500 ml-1"></i> توفر 99.9%</div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-3xl shadow-xl p-8 text-center card-hover">
+                    <div class="text-5xl mb-4">🗄️</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">قاعدة بيانات</h3>
+                    <p class="text-gray-600 mb-4">Cloudflare D1 (SQLite)</p>
+                    <div class="text-sm text-gray-500 space-y-2">
+                        <div><i class="fas fa-check text-green-500 ml-1"></i> سريعة وموثوقة</div>
+                        <div><i class="fas fa-check text-green-500 ml-1"></i> نسخ احتياطي تلقائي</div>
+                        <div><i class="fas fa-check text-green-500 ml-1"></i> Time Travel (30 يوم)</div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-3xl shadow-xl p-8 text-center card-hover">
+                    <div class="text-5xl mb-4">🔐</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">الأمان</h3>
+                    <p class="text-gray-600 mb-4">تشفير SSL/TLS</p>
+                    <div class="text-sm text-gray-500 space-y-2">
+                        <div><i class="fas fa-check text-green-500 ml-1"></i> HTTPS إجباري</div>
+                        <div><i class="fas fa-check text-green-500 ml-1"></i> حماية DDoS</div>
+                        <div><i class="fas fa-check text-green-500 ml-1"></i> خصوصية كاملة</div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-12 bg-white rounded-3xl shadow-xl p-8">
+                <h3 class="text-3xl font-bold text-gray-800 mb-6 text-center">متطلبات التشغيل</h3>
+                <div class="grid md:grid-cols-4 gap-6 text-center">
+                    <div>
+                        <i class="fas fa-laptop text-4xl text-blue-500 mb-3"></i>
+                        <p class="font-bold">أي جهاز</p>
+                        <p class="text-sm text-gray-600">كمبيوتر - جوال - تابلت</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-globe text-4xl text-green-500 mb-3"></i>
+                        <p class="font-bold">متصفح حديث</p>
+                        <p class="text-sm text-gray-600">Chrome - Safari - Firefox</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-wifi text-4xl text-purple-500 mb-3"></i>
+                        <p class="font-bold">إنترنت</p>
+                        <p class="text-sm text-gray-600">سرعة عادية كافية</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-plug text-4xl text-red-500 mb-3"></i>
+                        <p class="font-bold">لا تثبيت</p>
+                        <p class="text-sm text-gray-600">يعمل مباشرة من المتصفح</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 8: Pricing -->
+    <div class="slide items-center justify-center p-16 gradient-bg-2">
+        <div class="max-w-7xl w-full">
+            <h2 class="text-5xl font-black text-white mb-4 text-center">
+                <i class="fas fa-tags ml-4"></i>
+                الباقات والأسعار
+            </h2>
+            <p class="text-white text-xl text-center mb-12 opacity-90">اختر الباقة المناسبة لمدرستك</p>
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Basic Package -->
+                <div class="price-card bg-white rounded-3xl shadow-2xl overflow-hidden">
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-8 text-center">
+                        <div class="text-5xl mb-4">📦</div>
+                        <h3 class="text-3xl font-black mb-2">الأساسية</h3>
+                        <p class="text-blue-100">للمدارس الصغيرة</p>
+                    </div>
+                    <div class="p-8">
+                        <div class="text-center mb-6">
+                            <div class="text-5xl font-black text-gray-800">4,000</div>
+                            <div class="text-gray-500">ريال / سنوياً</div>
+                            <div class="text-sm text-gray-400 mt-1">أقل من 20 معلم</div>
+                        </div>
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="text-gray-700">التثبيت والإعداد الكامل</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="text-gray-700">تدريب 4 ساعات</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="text-gray-700">دعم فني (بريد إلكتروني)</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="text-gray-700">تحديثات مجانية سنة</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="text-gray-700">جميع الميزات الأساسية</span>
+                            </li>
+                        </ul>
+                        <button class="w-full bg-blue-500 text-white py-4 rounded-xl font-bold hover:bg-blue-600 transition-all">
+                            اختر هذه الباقة
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Professional Package (Recommended) -->
+                <div class="price-card bg-white rounded-3xl shadow-2xl overflow-hidden transform scale-105 border-4 border-yellow-400">
+                    <div class="bg-yellow-400 text-gray-800 py-2 text-center font-bold text-sm">
+                        ⭐ الأكثر طلباً
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-8 text-center">
+                        <div class="text-5xl mb-4">💎</div>
+                        <h3 class="text-3xl font-black mb-2">الاحترافية</h3>
+                        <p class="text-purple-100">للمدارس المتوسطة</p>
+                    </div>
+                    <div class="p-8">
+                        <div class="text-center mb-6">
+                            <div class="text-5xl font-black text-gray-800">10,000</div>
+                            <div class="text-gray-500">ريال / سنوياً</div>
+                            <div class="text-sm text-gray-400 mt-1">20-50 معلم</div>
+                        </div>
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="text-gray-700">كل ما في الأساسية +</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="text-gray-700 font-bold">تخصيص الشعار والألوان</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="text-gray-700">تدريب 8 ساعات</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="text-gray-700">دعم فني (بريد + WhatsApp)</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="text-gray-700 font-bold">تقارير مخصصة</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="text-gray-700">دعم أولوية</span>
+                            </li>
+                        </ul>
+                        <button class="w-full bg-purple-600 text-white py-4 rounded-xl font-bold hover:bg-purple-700 transition-all shadow-lg">
+                            اختر هذه الباقة
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Enterprise Package -->
+                <div class="price-card bg-white rounded-3xl shadow-2xl overflow-hidden">
+                    <div class="bg-gradient-to-br from-red-500 to-pink-600 text-white p-8 text-center">
+                        <div class="text-5xl mb-4">🏆</div>
+                        <h3 class="text-3xl font-black mb-2">المؤسسية</h3>
+                        <p class="text-red-100">للمدارس الكبيرة</p>
+                    </div>
+                    <div class="p-8">
+                        <div class="text-center mb-6">
+                            <div class="text-5xl font-black text-gray-800">مخصص</div>
+                            <div class="text-gray-500">حسب الاحتياجات</div>
+                            <div class="text-sm text-gray-400 mt-1">50+ معلم</div>
+                        </div>
+                        <ul class="space-y-4 mb-8">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="text-gray-700">كل ما في الاحترافية +</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="text-gray-700 font-bold">تكامل مع أنظمة أخرى</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="text-gray-700 font-bold">معايير تقييم مخصصة</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="text-gray-700">تدريب شامل لجميع المستخدمين</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="text-gray-700 font-bold">دعم فوري 24/7</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 ml-2"></i>
+                                <span class="text-gray-700">مدير حساب مخصص</span>
+                            </li>
+                        </ul>
+                        <button class="w-full bg-gradient-to-r from-red-500 to-pink-600 text-white py-4 rounded-xl font-bold hover:shadow-xl transition-all">
+                            تواصل معنا
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 9: Testimonials -->
+    <div class="slide items-center justify-center p-16 bg-gradient-to-br from-blue-50 to-purple-50">
+        <div class="max-w-6xl w-full">
+            <h2 class="text-5xl font-black text-gray-800 mb-12 text-center">
+                <i class="fas fa-comments text-blue-600 ml-4"></i>
+                ماذا يقول عملاؤنا؟
+            </h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="testimonial">
+                    <div class="flex items-center mb-4">
+                        <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold ml-4">
+                            أ
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xl">أحمد السعيد</h4>
+                            <p class="text-gray-600">مدير مدرسة</p>
+                        </div>
+                    </div>
+                    <div class="text-yellow-400 mb-3">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="text-gray-700 leading-relaxed">
+                        نظام ممتاز وسهل الاستخدام! وفّر علينا الكثير من الوقت والجهد. التقارير التحليلية ساعدتنا على اتخاذ قرارات أفضل لتطوير المدرسة.
+                    </p>
+                </div>
+                <div class="testimonial">
+                    <div class="flex items-center mb-4">
+                        <div class="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-bold ml-4">
+                            ف
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xl">فاطمة العتيبي</h4>
+                            <p class="text-gray-600">مشرفة تربوية</p>
+                        </div>
+                    </div>
+                    <div class="text-yellow-400 mb-3">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="text-gray-700 leading-relaxed">
+                        التقارير التفصيلية والمقارنات بين المعلمين أصبحت سهلة جداً. النظام احترافي ويحافظ على سرية التقييمات. ننصح به بشدة!
+                    </p>
+                </div>
+                <div class="testimonial">
+                    <div class="flex items-center mb-4">
+                        <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white text-2xl font-bold ml-4">
+                            م
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xl">محمد الشمري</h4>
+                            <p class="text-gray-600">معلم رياضيات</p>
+                        </div>
+                    </div>
+                    <div class="text-yellow-400 mb-3">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="text-gray-700 leading-relaxed">
+                        كمعلم، التقييمات ساعدتني على معرفة نقاط قوتي وتطوير نفسي. النظام عادل وشفاف ويساهم في تحسين جودة التعليم.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 10: Implementation Steps -->
+    <div class="slide items-center justify-center p-16 bg-gray-50">
+        <div class="max-w-5xl w-full">
+            <h2 class="text-5xl font-black text-gray-800 mb-12 text-center">
+                <i class="fas fa-rocket text-red-500 ml-4"></i>
+                خطوات التطبيق (7 أيام فقط!)
+            </h2>
+            <div class="space-y-6">
+                <div class="flex items-start bg-white rounded-2xl shadow-lg p-6 card-hover">
+                    <div class="flex-shrink-0 w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center text-2xl font-bold ml-6">
+                        1
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-2xl font-bold mb-2">التواصل والاستشارة</h3>
+                        <p class="text-gray-600">نتواصل معكم لفهم احتياجاتكم واختيار الباقة المناسبة (يوم واحد)</p>
+                    </div>
+                </div>
+                <div class="flex items-start bg-white rounded-2xl shadow-lg p-6 card-hover">
+                    <div class="flex-shrink-0 w-16 h-16 bg-purple-500 text-white rounded-full flex items-center justify-center text-2xl font-bold ml-6">
+                        2
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-2xl font-bold mb-2">توقيع العقد والدفع</h3>
+                        <p class="text-gray-600">توقيع الاتفاقية وسداد الدفعة الأولى (يوم واحد)</p>
+                    </div>
+                </div>
+                <div class="flex items-start bg-white rounded-2xl shadow-lg p-6 card-hover">
+                    <div class="flex-shrink-0 w-16 h-16 bg-green-500 text-white rounded-full flex items-center justify-center text-2xl font-bold ml-6">
+                        3
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-2xl font-bold mb-2">التثبيت والإعداد</h3>
+                        <p class="text-gray-600">نقوم بتجهيز النظام ورفع بيانات المدرسة (يومين)</p>
+                    </div>
+                </div>
+                <div class="flex items-start bg-white rounded-2xl shadow-lg p-6 card-hover">
+                    <div class="flex-shrink-0 w-16 h-16 bg-yellow-500 text-white rounded-full flex items-center justify-center text-2xl font-bold ml-6">
+                        4
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-2xl font-bold mb-2">التدريب</h3>
+                        <p class="text-gray-600">تدريب المدراء والمشرفين على استخدام النظام (يوم واحد)</p>
+                    </div>
+                </div>
+                <div class="flex items-start bg-white rounded-2xl shadow-lg p-6 card-hover">
+                    <div class="flex-shrink-0 w-16 h-16 bg-red-500 text-white rounded-full flex items-center justify-center text-2xl font-bold ml-6">
+                        5
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-2xl font-bold mb-2">الاختبار</h3>
+                        <p class="text-gray-600">تجربة النظام والتأكد من جاهزيته (يوم واحد)</p>
+                    </div>
+                </div>
+                <div class="flex items-start bg-white rounded-2xl shadow-lg p-6 card-hover">
+                    <div class="flex-shrink-0 w-16 h-16 bg-pink-500 text-white rounded-full flex items-center justify-center text-2xl font-bold ml-6">
+                        6
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-2xl font-bold mb-2">الإطلاق الرسمي</h3>
+                        <p class="text-gray-600">بدء استخدام النظام من قبل الطلاب والمعلمين (يوم واحد)</p>
+                    </div>
+                </div>
+                <div class="flex items-start bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-2xl shadow-2xl p-6">
+                    <div class="flex-shrink-0 w-16 h-16 bg-white text-green-500 rounded-full flex items-center justify-center text-2xl ml-6">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-2xl font-bold mb-2">الدعم المستمر</h3>
+                        <p>نبقى معكم طوال فترة الاشتراك لضمان أفضل تجربة</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 11: FAQ -->
+    <div class="slide items-center justify-center p-16 bg-gradient-to-br from-purple-50 to-pink-50">
+        <div class="max-w-5xl w-full">
+            <h2 class="text-5xl font-black text-gray-800 mb-12 text-center">
+                <i class="fas fa-question-circle text-purple-600 ml-4"></i>
+                الأسئلة الشائعة
+            </h2>
+            <div class="space-y-4">
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="p-6 cursor-pointer hover:bg-gray-50" onclick="toggleFAQ(this)">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xl font-bold text-gray-800">هل يتطلب النظام تثبيت برامج؟</h3>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </div>
+                        <p class="text-gray-600 mt-4 hidden">
+                            لا، النظام يعمل مباشرة من المتصفح. لا يحتاج لأي تثبيت. كل ما تحتاجه هو جهاز متصل بالإنترنت ومتصفح حديث.
+                        </p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="p-6 cursor-pointer hover:bg-gray-50" onclick="toggleFAQ(this)">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xl font-bold text-gray-800">هل التقييمات سرية؟</h3>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </div>
+                        <p class="text-gray-600 mt-4 hidden">
+                            نعم، سرية بنسبة 100%. النظام مصمم بحيث لا يمكن معرفة هوية الطالب الذي قيّم المعلم، مما يضمن صدق الإجابات.
+                        </p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="p-6 cursor-pointer hover:bg-gray-50" onclick="toggleFAQ(this)">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xl font-bold text-gray-800">كم يستغرق التثبيت؟</h3>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </div>
+                        <p class="text-gray-600 mt-4 hidden">
+                            عملية التثبيت والإعداد الكامل تستغرق 7 أيام عمل فقط، بما في ذلك التدريب والاختبار.
+                        </p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="p-6 cursor-pointer hover:bg-gray-50" onclick="toggleFAQ(this)">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xl font-bold text-gray-800">هل يمكن تخصيص معايير التقييم؟</h3>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </div>
+                        <p class="text-gray-600 mt-4 hidden">
+                            نعم، النظام يوفر مرونة كاملة في تخصيص معايير التقييم حسب احتياجات مدرستك (في الباقات الاحترافية والمؤسسية).
+                        </p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="p-6 cursor-pointer hover:bg-gray-50" onclick="toggleFAQ(this)">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xl font-bold text-gray-800">ماذا يحدث للبيانات عند انتهاء الاشتراك؟</h3>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </div>
+                        <p class="text-gray-600 mt-4 hidden">
+                            يمكنك تصدير جميع بياناتك بصيغة JSON قبل انتهاء الاشتراك. نحتفظ بالبيانات لمدة 90 يوم بعد الإلغاء، ثم يتم حذفها نهائياً.
+                        </p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="p-6 cursor-pointer hover:bg-gray-50" onclick="toggleFAQ(this)">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xl font-bold text-gray-800">هل يمكن إلغاء الاشتراك؟</h3>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </div>
+                        <p class="text-gray-600 mt-4 hidden">
+                            نعم، يمكن إلغاء الاشتراك قبل التجديد بـ 30 يوم. الإلغاء خلال السنة الأولى لا يستوجب استرداد الرسوم.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 12: Call to Action -->
+    <div class="slide items-center justify-center p-16 gradient-bg text-white">
+        <div class="max-w-4xl w-full text-center">
+            <h2 class="text-6xl font-black mb-8">
+                <i class="fas fa-phone-alt ml-4 animate-pulse"></i>
+                ابدأ الآن!
+            </h2>
+            <p class="text-3xl mb-12 leading-relaxed">
+                انضم إلى العشرات من المدارس التي وثقت بنا
+            </p>
+            <div class="grid md:grid-cols-2 gap-8 mb-12">
+                <div class="bg-white/10 backdrop-blur-lg rounded-3xl p-8">
+                    <div class="text-5xl mb-4">📞</div>
+                    <h3 class="text-2xl font-bold mb-4">اتصل بنا</h3>
+                    <p class="text-xl mb-4">+966 XXX XXX XXX</p>
+                    <p class="text-lg opacity-75">الأحد - الخميس، 9 ص - 5 م</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-lg rounded-3xl p-8">
+                    <div class="text-5xl mb-4">📧</div>
+                    <h3 class="text-2xl font-bold mb-4">راسلنا</h3>
+                    <p class="text-xl mb-4">sales@yourcompany.com</p>
+                    <p class="text-lg opacity-75">رد خلال 24 ساعة</p>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <button class="bg-white text-purple-600 px-12 py-5 rounded-full text-2xl font-black hover:bg-yellow-300 transition-all shadow-2xl hover:scale-105">
+                    <i class="fas fa-rocket ml-2"></i>
+                    احجز عرض توضيحي مجاني
+                </button>
+                <p class="text-lg opacity-90">أو اطلب عرض سعر مخصص لمدرستك</p>
+            </div>
+            <div class="mt-16 pt-8 border-t border-white/20">
+                <p class="text-xl mb-4">شكراً لاهتمامكم!</p>
+                <p class="text-lg opacity-75">نتطلع للعمل معكم لتحسين جودة التعليم في مدرستكم</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 12;
+
+        function updateProgress() {
+            const progress = (currentSlide / totalSlides) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('slideIndicator').textContent = currentSlide + ' / ' + totalSlides;
+        }
+
+        function showSlide(n) {
+            const slides = document.getElementsByClassName('slide');
+            if (n > totalSlides) currentSlide = 1;
+            if (n < 1) currentSlide = totalSlides;
+            
+            for (let i = 0; i < slides.length; i++) {
+                slides[i].classList.remove('active');
+            }
+            
+            slides[currentSlide - 1].classList.add('active');
+            updateProgress();
+        }
+
+        function nextSlide() {
+            currentSlide++;
+            showSlide(currentSlide);
+        }
+
+        function previousSlide() {
+            currentSlide--;
+            showSlide(currentSlide);
+        }
+
+        function toggleFAQ(element) {
+            const answer = element.querySelector('p');
+            const icon = element.querySelector('i');
+            
+            answer.classList.toggle('hidden');
+            icon.classList.toggle('fa-chevron-down');
+            icon.classList.toggle('fa-chevron-up');
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowRight' || event.key === 'ArrowUp') {
+                previousSlide();
+            } else if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') {
+                nextSlide();
+            }
+        });
+
+        // Initialize
+        updateProgress();
+    </script>
+</body>
+</html>
